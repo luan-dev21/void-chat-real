@@ -201,6 +201,16 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
+  // Iframe check to prevent disallowed_useragent error
+  if (window.self !== window.top) {
+    document.body.innerHTML = `
+      <div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center">
+        <h1 class="text-2xl font-bold">ERRO: Este aplicativo não pode ser executado em um iframe.</h1>
+      </div>
+    `;
+    return;
+  }
+
   // ---=== FIREBASE CONFIGURATION ===---
   const firebaseConfig = {
     apiKey: "AIzaSyCJY8KnCAmegTJKgxk8Vb0fdDU64JV-zbU",
