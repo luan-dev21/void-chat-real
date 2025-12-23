@@ -1,254 +1,525 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>VOID CHAT | O Vazio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOID CHAT</title>
   
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Firebase SDKs CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  
+  <!-- Font Awesome CDN for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Orbitron -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Orbitron', sans-serif; background-color: #000; color: #fff; }
-    .neon-border-cyan { box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); border: 1px solid rgba(0, 255, 255, 0.4); }
-    .neon-text-cyan { text-shadow: 0 0 10px #00ffff; }
-    .neon-text-green { text-shadow: 0 0 10px #39FF14; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    
-    /* Background Animado */
-    .stars {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 60%, #fff, transparent);
-      background-size: 200px 200px; opacity: 0.3; z-index: 0;
+    body {
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
     }
+    .neon-border-cyan {
+      box-shadow: 0 0 3px rgba(0, 255, 255, 0.8), 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+    .neon-text-cyan {
+      text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+    }
+    .neon-text-green {
+       text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+    }
+    .neon-button-glow {
+      transition: all 0.2s ease-in-out;
+    }
+    .neon-button-glow:hover {
+      box-shadow: 0 0 5px #00ffff, 0 0 15px #00ffff, 0 0 25px #00ffff;
+    }
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 2px #39FF14, 0 0 4px #39FF14; }
+      50% { box-shadow: 0 0 6px #39FF14, 0 0 12px #39FF14; }
+    }
+    .pulse-dot {
+      animation: pulse-green 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    .animated-stars {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 80% 10%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 70%, #fff, transparent), radial-gradient(2px 2px at 90% 80%, #fff, transparent),
+        radial-gradient(2px 2px at 10% 90%, #fff, transparent);
+      background-repeat: repeat; background-size: 300px 300px; animation: zoom 15s infinite alternate; opacity: 0.5;
+    }
+    @keyframes zoom {
+      from { transform: scale(1); }
+      to { transform: scale(1.2); }
+    }
+    /* Hide scrollbar */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 
-<body class="w-screen h-screen overflow-hidden flex flex-col">
-  <div class="stars"></div>
+<body class="bg-black text-white w-screen h-screen overflow-hidden">
+  <div class="animated-stars"></div>
 
-  <div id="login-screen" class="relative z-10 flex-1 flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-black/80 backdrop-blur-xl p-8 rounded-2xl neon-border-cyan text-center">
-      <h1 class="text-4xl font-black neon-text-green mb-2">VOID CHAT</h1>
-      <p class="text-cyan-400 text-sm mb-8 tracking-widest">ENTRE NO VAZIO</p>
-      
-      <button id="google-signin-btn" class="w-full flex items-center justify-center gap-3 bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition-all">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5" alt="Google">
-        Entrar com Google
+  <!-- Login Screen -->
+  <div id="login-screen" class="w-full h-full flex items-center justify-center p-4 relative z-10">
+    <div class="w-full max-w-md bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 neon-border-cyan space-y-6">
+      <div class="text-center">
+        <h1 class="text-4xl font-black text-white neon-text-green">VOID CHAT</h1>
+        <p class="text-cyan-400 neon-text-cyan text-sm">Acesse o Vazio.</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="email" class="block text-cyan-400 text-sm mb-1">Email</label>
+          <input type="email" id="email" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+        </div>
+        <div>
+          <label for="password" class="block text-cyan-400 text-sm mb-1">Senha</label>
+          <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+        </div>
+        <p id="auth-error" class="text-red-500 text-xs text-center h-4"></p>
+        <div class="space-y-2">
+            <button type="submit" id="login-btn" class="w-full font-bold py-2 px-4 rounded-md text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">Entrar</button>
+            <button type="button" id="signup-btn" class="w-full font-bold py-2 px-4 rounded-md text-cyan-400 border-2 border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Criar Conta</button>
+        </div>
+      </form>
+      <div class="flex items-center text-gray-500">
+        <hr class="flex-grow border-gray-700" />
+        <span class="px-2 text-xs">OU</span>
+        <hr class="flex-grow border-gray-700" />
+      </div>
+       <button id="google-signin-btn" class="w-full flex items-center justify-center gap-3 font-sans font-medium py-2 px-4 rounded-md text-black bg-white hover:bg-gray-200 transition-all">
+          <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+          Entrar com Google
       </button>
-      
-      <div id="login-status" class="mt-4 text-xs text-cyan-500 animate-pulse hidden">Conectando ao Vazio...</div>
+    </div>
+    <!-- Loading state overlay for login screen -->
+    <div id="login-loading-overlay" class="hidden absolute inset-0 bg-black/70 backdrop-blur-sm flex-col items-center justify-center z-20">
+      <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
+      <p id="status-msg" class="text-xl text-cyan-400 tracking-wider mt-4">Verificando login...</p>
     </div>
   </div>
 
-  <div id="entry-screen" class="hidden relative z-10 flex-1 flex-col items-center justify-center text-center p-4">
-    <h1 class="text-6xl font-black neon-text-green mb-4">VOID CHAT</h1>
-    <div id="search-controls">
-        <button id="enter-void-btn" class="px-12 py-4 border-2 border-cyan-500 text-cyan-400 font-bold rounded-full hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_20px_rgba(0,255,255,0.4)]">
-            PROCURAR ESTRANHO
+  <!-- Entry/Scanning Screen -->
+  <div id="entry-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 text-center relative z-10">
+    <div class="relative z-10">
+      <h1 class="text-6xl md:text-8xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
+      <p class="text-cyan-400 mt-4 neon-text-cyan">ONDE AS CONEXÕES SÃO REAIS E ANÔNIMAS.</p>
+      <div id="entry-content" class="mt-12">
+        <button id="enter-void-btn" class="px-10 py-4 text-xl font-bold text-cyan-400 bg-black border-2 border-cyan-400 rounded-md neon-button-glow hover:text-black hover:bg-cyan-400 transition-all duration-300">
+          ENTRAR NO VAZIO
         </button>
-    </div>
-    <div id="searching-loader" class="hidden flex-col items-center gap-4">
-        <div class="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="text-cyan-400 animate-pulse">ESCANEANDO O VAZIO...</p>
+      </div>
+      <div id="scanning-content" class="hidden mt-12 flex-col items-center justify-center space-y-4">
+        <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
+        <p class="text-xl text-cyan-400 tracking-wider">BUSCANDO CONEXÃO REAL...</p>
+      </div>
     </div>
   </div>
 
-  <main id="chat-screen" class="hidden relative z-10 flex-1 flex flex-col md:flex-row h-full w-full bg-black">
-    
-    <aside class="hidden md:flex w-64 border-r border-cyan-900/50 p-4 flex-col gap-6 bg-black/50">
-        <div class="text-center">
-            <p class="text-xs text-gray-500">CONECTADO COMO</p>
-            <p id="user-display-name" class="text-cyan-400 text-sm truncate">Anônimo</p>
+  <!-- Chat Screen -->
+  <main id="chat-screen" class="hidden w-full h-full p-4 gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+    <!-- Left Sidebar -->
+    <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+      <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">STATUS</h2>
+      <div class="flex-grow flex flex-col justify-center items-center text-center">
+        <div class="relative flex items-center justify-center w-24 h-24 mb-4">
+          <div class="absolute inset-0 bg-green-500/50 rounded-full animate-ping"></div>
+          <i class="fas fa-user-circle text-6xl text-white"></i>
         </div>
-        <div class="flex-1 flex flex-col justify-center gap-4">
-            <button class="w-full py-2 border border-purple-500 text-purple-500 text-xs rounded hover:bg-purple-500 hover:text-white transition-all">FILTRO VIP</button>
-            <button id="next-btn-side" class="w-full py-3 bg-cyan-600 text-black font-bold rounded hover:bg-cyan-400">PRÓXIMO</button>
-        </div>
-        <button id="logout-btn" class="text-red-500 text-xs hover:underline">DESCONECTAR</button>
+        <p class="text-2xl font-bold text-green-400 neon-text-green">ONLINE</p>
+        <p class="text-sm text-gray-400">Você está conectado ao Vazio.</p>
+      </div>
+       <div class="text-center border-t border-cyan-500/30 pt-4 space-y-3">
+          <div>
+            <p id="online-users" class="text-lg text-white">1</p>
+            <p class="text-sm text-cyan-400 neon-text-cyan flex items-center justify-center gap-2">
+              <span class="w-3 h-3 bg-green-400 rounded-full pulse-dot"></span>
+              HUMANOS CONECTADOS
+            </p>
+          </div>
+          <button id="logout-btn" class="w-full p-2 bg-red-800/50 hover:bg-red-700/50 border border-red-500/50 rounded-md transition-colors text-sm">
+            <i class="fas fa-sign-out-alt mr-2"></i>Sair
+          </button>
+      </div>
     </aside>
 
-    <section class="flex-1 flex flex-col h-full relative">
-        <header class="p-4 border-b border-cyan-900/50 flex justify-between items-center bg-black/80 backdrop-blur-md">
-            <span class="text-green-500 text-xs flex items-center gap-2">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> CONEXÃO ATIVA
-            </span>
-            <button id="next-btn-mobile" class="md:hidden px-4 py-1 bg-cyan-600 text-black text-xs font-bold rounded">PRÓXIMO</button>
+    <!-- Center Chat -->
+    <section class="w-1/2 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
+        <header class="p-3 border-b border-gray-700/50 text-center">
+          <h3 class="font-bold text-lg text-white">CONEXÃO ESTABELECIDA</h3>
+          <p class="text-xs text-gray-400">Você está conversando com um estranho.</p>
         </header>
-
-        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
-            </div>
-
-        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black to-transparent">
-            <form id="message-form" class="flex gap-2 max-w-4xl mx-auto">
-                <input type="text" id="message-input" placeholder="Diga algo ao Vazio..." autocomplete="off" 
-                    class="flex-1 bg-gray-900/80 border border-cyan-900 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-cyan-400 transition-all">
-                <button type="submit" class="bg-cyan-500 text-black px-6 rounded-lg font-bold hover:bg-cyan-400">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
+        <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
+          <!-- Messages will be injected here -->
         </div>
+        <footer class="p-3 border-t border-gray-700/50">
+          <form id="message-form" class="flex items-center gap-3">
+            <input type="text" id="message-input" placeholder="Digite no Vazio..." autocomplete="off" class="flex-1 bg-black/50 border border-cyan-500/50 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white transition-all">
+            <button type="submit" id="send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-4 rounded-md transition-colors">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </form>
+        </footer>
     </section>
+
+    <!-- Right Sidebar -->
+    <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+      <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">ÁREA VIP</h2>
+      <div class="flex-grow flex flex-col justify-center gap-4">
+          <button class="w-full text-center p-4 border-2 border-cyan-400 rounded-md neon-button-glow hover:bg-cyan-400 hover:text-black transition-all">
+            <p class="font-bold text-lg">ATIVAR FILTRO DE GÊNERO</p>
+            <p class="text-xs font-sans">REQUER ASSINATURA VIP</p>
+          </button>
+          <button class="w-full text-center p-4 border-2 border-purple-500 text-purple-400 rounded-md neon-button-glow hover:bg-purple-500 hover:text-black transition-all">
+            <p class="font-bold text-lg">TURBO MATCH</p>
+            <p class="text-xs font-sans">CONEXÃO IMEDIATA</p>
+          </button>
+      </div>
+      <button id="next-btn" class="w-full p-3 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded-md transition-colors">
+        PRÓXIMO
+      </button>
+    </aside>
   </main>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, set, push, onValue, onDisconnect, remove, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<script>
+document.addEventListener('DOMContentLoaded', () => {
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyCJY8KnCAmegTJKgxk8Vb0fdDU64JV-zbU",
-        authDomain: "meuchatreal.firebaseapp.com",
-        databaseURL: "https://meuchatreal-default-rtdb.firebaseio.com",
-        projectId: "meuchatreal",
-        storageBucket: "meuchatreal.firebasestorage.app",
-        messagingSenderId: "271430524108",
-        appId: "1:271430524108:web:e23b8c36a188f150467669"
-    };
+  // Iframe check to prevent disallowed_useragent error
+  if (window.self !== window.top) {
+    document.body.innerHTML = `
+      <div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center">
+        <h1 class="text-2xl font-bold">ERRO: Este aplicativo não pode ser executado em um iframe.</h1>
+      </div>
+    `;
+    return;
+  }
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+  // ---=== FIREBASE CONFIGURATION ===---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJY8KnCAmegTJKgxk8Vb0fdDU64JV-zbU",
+    authDomain: "meuchatreal.firebaseapp.com",
+    databaseURL: "https://meuchatreal-default-rtdb.firebaseio.com",
+    projectId: "meuchatreal",
+    storageBucket: "meuchatreal.firebasestorage.app",
+    messagingSenderId: "271430524108",
+    appId: "1:271430524108:web:e23b8c36a188f150467669"
+  };
 
-    // Variáveis de Estado
-    let currentUser = null;
-    let chatRoomId = null;
-    let myQueueKey = null;
+  // ---=== INITIALIZATION ===---
+  let db, auth;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    auth = firebase.auth();
+  } catch (e) {
+    console.error("Firebase initialization failed.", e);
+    alert("Erro fatal na configuração do Firebase.");
+    return;
+  }
 
-    // Elementos DOM
-    const screens = {
-        login: document.getElementById('login-screen'),
-        entry: document.getElementById('entry-screen'),
-        chat: document.getElementById('chat-screen')
-    };
+  // ---=== DOM ELEMENTS ===---
+  const loginScreen = document.getElementById('login-screen');
+  const entryScreen = document.getElementById('entry-screen');
+  const chatScreen = document.getElementById('chat-screen');
+  const loginLoadingOverlay = document.getElementById('login-loading-overlay');
+  const statusMsg = document.getElementById('status-msg');
+  
+  const loginForm = document.getElementById('login-form');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('login-btn');
+  const signupBtn = document.getElementById('signup-btn');
+  const googleSigninBtn = document.getElementById('google-signin-btn');
+  const authErrorEl = document.getElementById('auth-error');
+  const logoutBtn = document.getElementById('logout-btn');
 
-    function showScreen(name) {
-        Object.values(screens).forEach(s => s.classList.add('hidden'));
-        screens[name].classList.remove('hidden');
-        if(name === 'chat') screens[name].classList.add('flex');
+  const enterVoidBtn = document.getElementById('enter-void-btn');
+  const entryContent = document.getElementById('entry-content');
+  const scanningContent = document.getElementById('scanning-content');
+  const messageForm = document.getElementById('message-form');
+  const messageInput = document.getElementById('message-input');
+  const chatContainer = document.getElementById('chat-container');
+  const nextBtn = document.getElementById('next-btn');
+  const onlineUsersEl = document.getElementById('online-users');
+
+  // ---=== STATE VARIABLES ===---
+  let userId = null;
+  let userProfile = null;
+  let sessionId = null;
+  let chatRoomId = null;
+  let partnerId = null;
+  let roomRef = null;
+  let messagesListener = null;
+  let roomValueListener = null;
+
+  // ---=== UI HELPER FUNCTIONS ===---
+  const setLoadingState = (isLoading, message = '') => {
+      if (isLoading) {
+          statusMsg.textContent = message;
+          loginLoadingOverlay.classList.remove('hidden');
+          loginLoadingOverlay.classList.add('flex');
+      } else {
+          loginLoadingOverlay.classList.add('hidden');
+          loginLoadingOverlay.classList.remove('flex');
+      }
+  };
+
+  const showView = (view) => {
+    loginScreen.classList.add('hidden');
+    entryScreen.classList.add('hidden');
+    chatScreen.classList.add('hidden');
+    if(view === 'login') loginScreen.classList.remove('hidden');
+    if(view === 'entry') {
+        entryScreen.style.display = 'flex';
+        entryContent.classList.remove('hidden');
+        scanningContent.style.display = 'none';
     }
+    if(view === 'scanning') {
+        entryScreen.style.display = 'flex';
+        entryContent.classList.add('hidden');
+        scanningContent.style.display = 'flex';
+    }
+    if(view === 'chat') chatScreen.style.display = 'flex';
+  };
+  
+  const addMessageToUI = (message) => {
+    if (!message || !message.senderId) return; // Defensive check
+    const isMe = message.senderId === userId;
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flex fade-in ${isMe ? 'justify-end' : 'justify-start'}`;
+    messageDiv.innerHTML = `
+      <div class="max-w-md px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}">
+        <p class="text-sm break-words">${message.text}</p>
+      </div>
+    `;
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  };
+  
+  const resetState = () => {
+    if (roomRef) {
+        if (messagesListener) roomRef.child('messages').off('child_added', messagesListener);
+        if (roomValueListener) roomRef.off('value', roomValueListener);
+        roomRef.remove();
+    }
+    if (sessionId) {
+        db.ref(`queue/${sessionId}`).remove();
+        sessionId = null;
+    }
+    chatRoomId = null;
+    partnerId = null;
+    roomRef = null;
+    messagesListener = null;
+    roomValueListener = null;
+    chatContainer.innerHTML = '';
+  };
+  
+  // ---=== AUTHENTICATION LOGIC ===---
+  const syncUserProfile = async (user) => {
+    const userRef = db.ref(`users/${user.uid}`);
+    const snapshot = await userRef.get();
+    if (!snapshot.exists()) {
+      userProfile = { isPremium: false, credits: 0, email: user.email };
+      await userRef.set(userProfile);
+    } else {
+      userProfile = snapshot.val();
+    }
+  };
 
-    // --- LOGICA DE AUTH ---
-    document.getElementById('google-signin-btn').onclick = () => {
-        document.getElementById('login-status').classList.remove('hidden');
-        signInWithRedirect(auth, new GoogleAuthProvider());
+  const handleAuthError = (error) => {
+    setLoadingState(false);
+    switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password': authErrorEl.textContent = 'Email ou senha inválidos.'; break;
+        case 'auth/email-already-in-use': authErrorEl.textContent = 'Este email já está em uso.'; break;
+        case 'auth/weak-password': authErrorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; break;
+        case 'auth/account-exists-with-different-credential':
+            authErrorEl.textContent = 'Uma conta já existe com este email.';
+            break;
+        default: authErrorEl.textContent = 'Ocorreu um erro. Tente novamente.'; break;
+    }
+  };
+  
+  setLoadingState(true, 'Verificando login...');
+  auth.getRedirectResult().catch(handleAuthError);
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      setLoadingState(true, 'Conectando ao banco de dados...');
+      userId = user.uid;
+      await syncUserProfile(user);
+      showView('entry');
+      setLoadingState(false);
+    } else {
+      userId = null;
+      userProfile = null;
+      resetState();
+      showView('login');
+      setLoadingState(false);
+    }
+  });
+
+  // ---=== CORE LOGIC: MATCHMAKING & CHAT ===---
+  const findPartner = () => {
+    console.log("Buscando usuários...");
+    showView('scanning');
+    
+    const queueRef = db.ref('queue');
+    const myQueueEntryRef = queueRef.push();
+    sessionId = myQueueEntryRef.key;
+
+    myQueueEntryRef.onDisconnect().remove();
+
+    const myQueueData = {
+        userId: userId,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('user-display-name').textContent = user.displayName || "Explorador";
-            showScreen('entry');
+    queueRef.transaction(currentQueue => {
+        if (currentQueue === null) {
+            let newQueue = {};
+            newQueue[sessionId] = myQueueData;
+            return newQueue;
+        }
+
+        const partnerSessionId = Object.keys(currentQueue).find(id => id !== sessionId);
+
+        if (partnerSessionId) {
+            console.log("Usuário encontrado!");
+            partnerId = currentQueue[partnerSessionId].userId;
+            delete currentQueue[partnerSessionId];
+            return currentQueue;
         } else {
-            showScreen('login');
+            currentQueue[sessionId] = myQueueData;
+            return currentQueue;
+        }
+    }, (error, committed) => {
+        if (error) {
+            console.error("Matchmaking transaction failed:", error);
+            alert('Ocorreu um erro de conexão. Tente novamente.');
+            myQueueEntryRef.onDisconnect().cancel();
+            showView('entry');
+        } else if (committed) {
+            if (partnerId) {
+                myQueueEntryRef.onDisconnect().cancel();
+                console.log("Criando sala...");
+
+                const roomIdParts = [userId, partnerId].sort();
+                chatRoomId = `room_${roomIdParts[0]}_${roomIdParts[1]}`;
+                
+                roomRef = db.ref(`rooms/${chatRoomId}`);
+                roomRef.set({ members: { [userId]: true, [partnerId]: true } });
+                roomRef.onDisconnect().remove();
+                startChat();
+            } else {
+                console.log("Adicionado à fila. Aguardando outro usuário...");
+                listenForMyRoom();
+            }
         }
     });
+  };
 
-    // --- LOGICA DE MATCHMAKING (FILA) ---
-    async function findMatch() {
-        if (!currentUser) return;
-        
-        document.getElementById('search-controls').classList.add('hidden');
-        document.getElementById('searching-loader').classList.remove('hidden');
+  const listenForMyRoom = () => {
+    const roomsRef = db.ref('rooms');
+    roomsRef.on('child_added', (roomSnapshot) => {
+        const roomData = roomSnapshot.val();
+        if (roomData && roomData.members && roomData.members[userId]) {
+            console.log("Sala encontrada! Conectando...");
+            roomsRef.off();
 
-        const queueRef = ref(db, 'queue');
-        
-        // Tenta encontrar alguém na fila
-        const matchmakingResult = await runTransaction(queueRef, (currentQueue) => {
-            if (!currentQueue) return { [currentUser.uid]: true };
-            
-            const keys = Object.keys(currentQueue);
-            const partnerId = keys.find(id => id !== currentUser.uid);
-
-            if (partnerId) {
-                // Remove o parceiro da fila para dar match
-                delete currentQueue[partnerId];
-                return currentQueue;
-            } else {
-                // Se ninguém, entra na fila
-                currentQueue[currentUser.uid] = true;
-                return currentQueue;
+            if(sessionId) {
+                const myQueueEntryRef = db.ref(`queue/${sessionId}`);
+                myQueueEntryRef.onDisconnect().cancel();
+                myQueueEntryRef.remove();
             }
-        });
+            
+            chatRoomId = roomSnapshot.key;
+            partnerId = Object.keys(roomData.members).find(id => id !== userId);
+            roomRef = db.ref(`rooms/${chatRoomId}`);
+            roomRef.onDisconnect().remove();
+            
+            startChat();
+        }
+    });
+  };
 
-        // O Firebase Transaction não retorna diretamente o parceiro, então ouvimos a criação da sala
-        listenForMatch();
-    }
+  const startChat = () => {
+    showView('chat');
+    messagesListener = roomRef.child('messages').on('child_added', (snapshot) => addMessageToUI(snapshot.val()));
+    roomValueListener = roomRef.on('value', (snapshot) => {
+      if (!snapshot.exists()) {
+        alert('O estranho se desconectou.');
+        resetState();
+        showView('entry');
+      } else {
+         const members = snapshot.val().members;
+         if(members) onlineUsersEl.textContent = Object.keys(members).length;
+      }
+    });
+  };
 
-    function listenForMatch() {
-        const roomsRef = ref(db, 'rooms');
-        onValue(roomsRef, (snapshot) => {
-            snapshot.forEach((child) => {
-                const roomData = child.val();
-                if (roomData.users && roomData.users[currentUser.uid]) {
-                    chatRoomId = child.key;
-                    startChat();
-                }
-            });
-        });
+  const sendMessage = (text) => {
+    if (text.trim() === '' || !roomRef) return;
+    roomRef.child('messages').push({
+      senderId: userId,
+      text: text,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+  };
 
-        // Fallback: Adiciona na fila se não achou sala imediata
-        set(ref(db, `queue/${currentUser.uid}`), true);
-        onDisconnect(ref(db, `queue/${currentUser.uid}`)).remove();
-    }
+  // ---=== EVENT LISTENERS ===---
+  loginForm.addEventListener('submit', (e) => e.preventDefault());
+  loginBtn.addEventListener('click', () => {
+      authErrorEl.textContent = '';
+      setLoadingState(true, 'Autenticando...');
+      auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
+  });
+  signupBtn.addEventListener('click', () => {
+      authErrorEl.textContent = '';
+      setLoadingState(true, 'Criando conta...');
+      auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
+  });
+  googleSigninBtn.addEventListener('click', () => {
+      authErrorEl.textContent = '';
+      setLoadingState(true, 'Redirecionando para o Google...');
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithRedirect(provider);
+  });
+  logoutBtn.addEventListener('click', () => auth.signOut());
+  enterVoidBtn.addEventListener('click', () => findPartner());
+  nextBtn.addEventListener('click', () => {
+    resetState();
+    findPartner();
+  });
+  messageForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    sendMessage(messageInput.value);
+    messageInput.value = '';
+  });
 
-    // --- LOGICA DE CHAT ---
-    function startChat() {
-        showScreen('chat');
-        const chatContainer = document.getElementById('chat-container');
-        chatContainer.innerHTML = '<p class="text-center text-xs text-cyan-700 neon-text-cyan py-4">SISTEMA: Estranho conectado.</p>';
-        
-        const messagesRef = ref(db, `rooms/${chatRoomId}/messages`);
-        onValue(messagesRef, (snapshot) => {
-            chatContainer.innerHTML = '';
-            snapshot.forEach((msg) => {
-                const data = msg.val();
-                const isMe = data.sender === currentUser.uid;
-                
-                const div = document.createElement('div');
-                div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`;
-                div.innerHTML = `
-                    <div class="${isMe ? 'bg-cyan-600 text-black' : 'bg-gray-800 text-white'} px-4 py-2 rounded-2xl max-w-[80%] break-words shadow-lg">
-                        ${data.text}
-                    </div>
-                `;
-                chatContainer.appendChild(div);
-            });
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        });
+  window.addEventListener('beforeunload', () => {
+      if (sessionId) db.ref(`queue/${sessionId}`).remove();
+      if (chatRoomId) db.ref(`rooms/${chatRoomId}`).remove();
+  });
+});
+</script>
 
-        // Se o outro sair, a sala morre
-        onDisconnect(ref(db, `rooms/${chatRoomId}`)).remove();
-    }
-
-    // --- EVENTOS ---
-    document.getElementById('enter-void-btn').onclick = findMatch;
-    
-    document.getElementById('message-form').onsubmit = (e) => {
-        e.preventDefault();
-        const input = document.getElementById('message-input');
-        if (!input.value.trim() || !chatRoomId) return;
-
-        const messagesRef = ref(db, `rooms/${chatRoomId}/messages`);
-        push(messagesRef, {
-            sender: currentUser.uid,
-            text: input.value,
-            time: serverTimestamp()
-        });
-        input.value = '';
-    };
-
-    const nextAction = () => {
-        if(chatRoomId) remove(ref(db, `rooms/${chatRoomId}`));
-        location.reload(); // Jeito mais limpo de resetar a fila e buscar novo
-    };
-
-    document.getElementById('next-btn-side').onclick = nextAction;
-    document.getElementById('next-btn-mobile').onclick = nextAction;
-    document.getElementById('logout-btn').onclick = () => signOut(auth);
-
-  </script>
 </body>
 </html>
