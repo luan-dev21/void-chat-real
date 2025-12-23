@@ -116,6 +116,24 @@
     </div>
   </div>
 
+  <!-- Profile Creation Screen -->
+  <div id="profile-screen" class="hidden w-full h-full flex items-center justify-center p-4 relative z-10">
+    <div class="w-full max-w-md bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 neon-border-cyan space-y-6">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-white neon-text-green">CRIE SEU PERFIL</h1>
+        <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade anônima no Vazio.</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="nickname-input" class="block text-cyan-400 text-sm mb-1">Seu Apelido no Vazio</label>
+          <input type="text" id="nickname-input" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+        </div>
+        <p id="profile-error" class="text-red-500 text-xs text-center h-4"></p>
+        <button id="save-profile-btn" class="w-full font-bold py-2 px-4 rounded-md text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">Salvar Perfil</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Entry/Scanning Screen -->
   <div id="entry-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 text-center relative z-10">
     <div class="relative z-10">
@@ -243,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingOverlay = document.getElementById('loading-overlay');
   const loadingMsg = document.getElementById('loading-msg');
   const loginScreen = document.getElementById('login-screen');
+  const profileScreen = document.getElementById('profile-screen');
   const entryScreen = document.getElementById('entry-screen');
   const chatScreen = document.getElementById('chat-screen');
   
@@ -254,6 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const googleSigninBtn = document.getElementById('google-signin-btn');
   const authErrorEl = document.getElementById('auth-error');
   const logoutBtn = document.getElementById('logout-btn');
+
+  const nicknameInput = document.getElementById('nickname-input');
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+  const profileErrorEl = document.getElementById('profile-error');
 
   const enterVoidBtn = document.getElementById('enter-void-btn');
   const entryContent = document.getElementById('entry-content');
@@ -272,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let roomRef = null;
   let messagesListener = null;
   let roomValueListener = null;
+  let chatNicknames = {};
 
   // ---=== UI HELPER FUNCTIONS ===---
   const setLoadingState = (isLoading, message = '') => {
@@ -287,16 +311,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showView = (view) => {
     loginScreen.classList.add('hidden');
+    profileScreen.classList.add('hidden');
     entryScreen.classList.add('hidden');
     chatScreen.classList.add('hidden');
     
     loginScreen.style.display = 'none';
+    profileScreen.style.display = 'none';
     entryScreen.style.display = 'none';
     chatScreen.style.display = 'none';
 
     if(view === 'login') {
       loginScreen.classList.remove('hidden');
       loginScreen.style.display = 'flex';
+    }
+    if(view === 'profile') {
+      profileScreen.classList.remove('hidden');
+      profileScreen.style.display = 'flex';
     }
     if(view === 'entry') {
         entryScreen.classList.remove('hidden');
@@ -320,11 +350,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const addMessageToUI = (message) => {
     if (!message || !message.senderId || !currentUser) return;
     const isMe = message.senderId === currentUser.uid;
+    const senderNickname = chatNicknames[message.senderId] || 'Estranho';
+
     const messageDiv = document.createElement('div');
-    messageDiv.className = `flex fade-in ${isMe ? 'justify-end' : 'justify-start'}`;
+    messageDiv.className = `flex flex-col fade-in ${isMe ? 'items-end' : 'items-start'}`;
+    
     messageDiv.innerHTML = `
-      <div class="max-w-md px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}">
-        <p class="text-sm break-words">${message.text}</p>
+      <div class="max-w-md">
+        <p class="text-xs mb-1 ${isMe ? 'text-right' : 'text-left'} text-cyan-400">${senderNickname}</p>
+        <div class="px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}">
+          <p class="text-sm break-words">${message.text}</p>
+        </div>
       </div>
     `;
     chatContainer.appendChild(messageDiv);
@@ -348,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     roomRef = null;
     messagesListener = null;
     roomValueListener = null;
+    chatNicknames = {};
     chatContainer.innerHTML = '';
   };
   
@@ -367,33 +404,38 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("Auth Error:", error);
   };
   
+  const checkUserProfile = async (user) => {
+    const userRef = db.ref(`users/${user.uid}`);
+    const snapshot = await userRef.once('value');
+    if (snapshot.exists() && snapshot.val().nickname) {
+      console.log("User profile exists, proceeding to entry screen.");
+      showView('entry');
+    } else {
+      console.log("User profile does not exist, showing profile creation screen.");
+      showView('profile');
+    }
+    setLoadingState(false);
+  };
+  
   setLoadingState(true, 'Verificando login...');
+  auth.getRedirectResult().catch(handleAuthError);
 
-  // Process the redirect result from Google Sign-In on page load.
-  auth.getRedirectResult()
-    .then((result) => {
-      if (result.user) {
-        console.log('Google Login Sucesso');
-      }
-    }).catch(handleAuthError);
-
-  // onAuthStateChanged is the single source of truth for the UI.
-  // It handles all auth state changes, including after a redirect.
   auth.onAuthStateChanged((user) => {
-    console.log("Estado atual do Auth:", user); // As requested for debugging.
+    console.log("Estado atual do Auth:", user);
     if (user) {
       currentUser = user;
-      showView('entry');
+      checkUserProfile(user);
     } else {
       currentUser = null;
       resetState();
       showView('login');
+      setLoadingState(false);
     }
-    setLoadingState(false);
   });
 
   // ---=== CORE LOGIC: MATCHMAKING & CHAT ===---
   const findPartner = async () => {
+    // ... (rest of the findPartner logic remains unchanged)
     if (!currentUser) return;
     console.log("Looking for a partner...");
     showView('scanning');
@@ -424,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         roomRef = db.ref(`rooms/${chatRoomId}`);
         roomRef.set(roomData).then(() => {
-          // Clean up queue entries
           db.ref(`queue/${partnerSessionId}`).remove();
           myQueueEntryRef.onDisconnect().cancel();
           myQueueEntryRef.remove();
@@ -440,17 +481,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const queueListener = queueRef.on('value', snapshot => {
         const queue = snapshot.val();
         if (!queue) return;
-
         const otherUsers = Object.entries(queue).filter(([key, val]) => val.userId !== currentUser.uid);
-
         if (otherUsers.length > 0) {
-            queueRef.off('value', queueListener); // Stop listening once we found someone
+            queueRef.off('value', queueListener);
             const [partnerSessionId, partnerData] = otherUsers[0];
             onPartnerFound(partnerSessionId, partnerData.userId);
         }
     });
 
-    // Timeout to prevent waiting forever
     setTimeout(() => {
         queueRef.off('value', queueListener);
         if (!chatRoomId && sessionId) {
@@ -460,22 +498,35 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionId = null;
             showView('entry');
         }
-    }, 30000); // 30 seconds timeout
+    }, 30000);
   };
 
-  const startChat = (pId) => {
+  const startChat = async (pId) => {
     if (!currentUser || !chatRoomId) return;
     partnerId = pId;
     console.log(`Starting chat with ${partnerId} in room ${chatRoomId}`);
+
+    // Fetch nicknames before starting chat
+    try {
+        const myNickPromise = db.ref(`users/${currentUser.uid}/nickname`).once('value');
+        const partnerNickPromise = db.ref(`users/${partnerId}/nickname`).once('value');
+        const [myNickSnapshot, partnerNickSnapshot] = await Promise.all([myNickPromise, partnerNickPromise]);
+        
+        chatNicknames[currentUser.uid] = myNickSnapshot.val() || 'Você';
+        chatNicknames[partnerId] = partnerNickSnapshot.val() || 'Estranho';
+    } catch (error) {
+        console.error("Failed to fetch nicknames:", error);
+        chatNicknames[currentUser.uid] = 'Você';
+        chatNicknames[partnerId] = 'Estranho';
+    }
+
     roomRef = db.ref(`rooms/${chatRoomId}`);
-    roomRef.onDisconnect().remove(); // Clean up room if this user disconnects
+    roomRef.onDisconnect().remove();
 
     showView('chat');
     
-    // Listen for new messages
     messagesListener = roomRef.child('messages').on('child_added', (snapshot) => addMessageToUI(snapshot.val()));
     
-    // Listen for partner disconnection
     roomValueListener = roomRef.on('value', (snapshot) => {
       if (!snapshot.exists() || !snapshot.val().members || !snapshot.val().members[partnerId]) {
         alert('O estranho se desconectou.');
@@ -511,10 +562,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   googleSigninBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
-      setLoadingState(true, 'Redirecionando para o Google...');
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithRedirect(provider).catch(handleAuthError);
   });
+  
+  saveProfileBtn.addEventListener('click', () => {
+    const nickname = nicknameInput.value.trim();
+    if (nickname.length < 3) {
+      profileErrorEl.textContent = 'O apelido deve ter pelo menos 3 caracteres.';
+      return;
+    }
+    profileErrorEl.textContent = '';
+    setLoadingState(true, 'Salvando perfil...');
+    db.ref(`users/${currentUser.uid}`).set({ nickname: nickname })
+      .then(() => {
+        console.log('Profile saved successfully.');
+        showView('entry');
+      })
+      .catch((error) => {
+        console.error("Error saving profile:", error);
+        profileErrorEl.textContent = 'Erro ao salvar o perfil. Tente novamente.';
+      })
+      .finally(() => {
+        setLoadingState(false);
+      });
+  });
+
   logoutBtn.addEventListener('click', () => auth.signOut());
   enterVoidBtn.addEventListener('click', findPartner);
   
@@ -530,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
     messageInput.focus();
   });
 
-  // Final cleanup on window close
   window.addEventListener('beforeunload', () => {
       if(currentUser){
         resetState();
