@@ -368,15 +368,23 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   setLoadingState(true, 'Verificando login...');
-  auth.getRedirectResult().catch(handleAuthError).finally(() => setLoadingState(false));
 
+  // Process the redirect result from Google Sign-In on page load.
+  auth.getRedirectResult()
+    .then((result) => {
+      if (result.user) {
+        console.log('Google Login Sucesso');
+      }
+    }).catch(handleAuthError);
+
+  // onAuthStateChanged is the single source of truth for the UI.
+  // It handles all auth state changes, including after a redirect.
   auth.onAuthStateChanged((user) => {
+    console.log("Estado atual do Auth:", user); // As requested for debugging.
     if (user) {
-      console.log("User is signed in:", user.uid);
       currentUser = user;
       showView('entry');
     } else {
-      console.log("User is signed out.");
       currentUser = null;
       resetState();
       showView('login');
@@ -532,3 +540,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 </body>
+</html>
