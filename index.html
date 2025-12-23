@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---=== STATE VARIABLES ===---
   let userId = null;
   let userProfile = null;
+  let sessionId = null;
   let chatRoomId = null;
   let partnerId = null;
   let roomRef = null;
@@ -257,7 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
     entryScreen.classList.add('hidden');
     chatScreen.classList.add('hidden');
     if(view === 'login') loginScreen.classList.remove('hidden');
-    if(view === 'entry') entryScreen.style.display = 'flex';
+    if(view === 'entry') {
+        entryScreen.style.display = 'flex';
+        entryContent.classList.remove('hidden');
+        scanningContent.style.display = 'none';
+    }
     if(view === 'scanning') {
         entryScreen.style.display = 'flex';
         entryContent.classList.add('hidden');
@@ -286,6 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (roomValueListener) roomRef.off('value', roomValueListener);
         roomRef.remove();
     }
+    if (sessionId) {
+        db.ref(`queue/${sessionId}`).remove();
+        sessionId = null;
+    }
     chatRoomId = null;
     partnerId = null;
     roomRef = null;
@@ -299,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       userId = user.uid;
       await syncUserProfile(user);
-      showView('entry'); // Show the "ENTRAR NO VAZIO" screen
+      showView('entry');
     } else {
       userId = null;
       userProfile = null;
@@ -312,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const userRef = db.ref(`users/${user.uid}`);
     const snapshot = await userRef.get();
     if (!snapshot.exists()) {
-      // New user, create profile
       userProfile = { isPremium: false, credits: 0, email: user.email };
       await userRef.set(userProfile);
     } else {
@@ -323,50 +331,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleAuthError = (error) => {
     switch (error.code) {
         case 'auth/user-not-found':
-        case 'auth/wrong-password':
-            authErrorEl.textContent = 'Email ou senha inválidos.';
-            break;
-        case 'auth/email-already-in-use':
-            authErrorEl.textContent = 'Este email já está em uso.';
-            break;
-        case 'auth/weak-password':
-            authErrorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.';
-            break;
-        default:
-            authErrorEl.textContent = 'Ocorreu um erro. Tente novamente.';
-            break;
+        case 'auth/wrong-password': authErrorEl.textContent = 'Email ou senha inválidos.'; break;
+        case 'auth/email-already-in-use': authErrorEl.textContent = 'Este email já está em uso.'; break;
+        case 'auth/weak-password': authErrorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; break;
+        default: authErrorEl.textContent = 'Ocorreu um erro. Tente novamente.'; break;
     }
   };
   
   // ---=== CORE LOGIC: MATCHMAKING & CHAT ===---
   const findPartner = () => {
+    console.log("Buscando usuários...");
     showView('scanning');
-    const waitingRoomRef = db.ref('waitingRoom');
-    db.ref(`waitingRoom/${userId}`).onDisconnect().remove();
+    
+    const queueRef = db.ref('queue');
+    const myQueueEntryRef = queueRef.push();
+    sessionId = myQueueEntryRef.key;
 
-    waitingRoomRef.transaction(currentWaitingRoom => {
-        if (currentWaitingRoom === null) return { [userId]: true };
-        const waitingUsers = Object.keys(currentWaitingRoom).filter(id => id !== userId);
-        if (waitingUsers.length > 0) {
-            partnerId = waitingUsers[0];
-            delete currentWaitingRoom[partnerId];
-            return currentWaitingRoom;
+    myQueueEntryRef.onDisconnect().remove();
+
+    const myQueueData = {
+        userId: userId,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    queueRef.transaction(currentQueue => {
+        if (currentQueue === null) {
+            let newQueue = {};
+            newQueue[sessionId] = myQueueData;
+            return newQueue;
+        }
+
+        const partnerSessionId = Object.keys(currentQueue).find(id => id !== sessionId);
+
+        if (partnerSessionId) {
+            console.log("Usuário encontrado!");
+            partnerId = currentQueue[partnerSessionId].userId;
+            delete currentQueue[partnerSessionId];
+            return currentQueue;
         } else {
-            currentWaitingRoom[userId] = true;
-            return currentWaitingRoom;
+            currentQueue[sessionId] = myQueueData;
+            return currentQueue;
         }
     }, (error, committed) => {
         if (error) {
+            console.error("Matchmaking transaction failed:", error);
             alert('Ocorreu um erro de conexão. Tente novamente.');
+            myQueueEntryRef.onDisconnect().cancel();
             showView('entry');
         } else if (committed) {
             if (partnerId) {
-                chatRoomId = `room_${userId}_${partnerId}`;
-                roomRef = db.ref(`chatRooms/${chatRoomId}`);
+                myQueueEntryRef.onDisconnect().cancel();
+                console.log("Criando sala...");
+
+                const roomIdParts = [userId, partnerId].sort();
+                chatRoomId = `room_${roomIdParts[0]}_${roomIdParts[1]}`;
+                
+                roomRef = db.ref(`rooms/${chatRoomId}`);
                 roomRef.set({ members: { [userId]: true, [partnerId]: true } });
                 roomRef.onDisconnect().remove();
                 startChat();
             } else {
+                console.log("Adicionado à fila. Aguardando outro usuário...");
                 listenForMyRoom();
             }
         }
@@ -374,16 +399,24 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const listenForMyRoom = () => {
-    const chatRoomsRef = db.ref('chatRooms');
-    chatRoomsRef.on('child_added', (roomSnapshot) => {
+    const roomsRef = db.ref('rooms');
+    roomsRef.on('child_added', (roomSnapshot) => {
         const roomData = roomSnapshot.val();
-        if(roomData.members && roomData.members[userId]){
-            chatRoomsRef.off();
-            db.ref(`waitingRoom/${userId}`).onDisconnect().cancel();
+        if (roomData && roomData.members && roomData.members[userId]) {
+            console.log("Sala encontrada! Conectando...");
+            roomsRef.off();
+
+            if(sessionId) {
+                const myQueueEntryRef = db.ref(`queue/${sessionId}`);
+                myQueueEntryRef.onDisconnect().cancel();
+                myQueueEntryRef.remove();
+            }
+            
             chatRoomId = roomSnapshot.key;
             partnerId = Object.keys(roomData.members).find(id => id !== userId);
-            roomRef = db.ref(`chatRooms/${chatRoomId}`);
+            roomRef = db.ref(`rooms/${chatRoomId}`);
             roomRef.onDisconnect().remove();
+            
             startChat();
         }
     });
@@ -415,34 +448,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---=== EVENT LISTENERS ===---
   loginForm.addEventListener('submit', (e) => e.preventDefault());
-  
   loginBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
-      auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
-        .catch(handleAuthError);
+      auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
   });
-
   signupBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
-      auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
-        .catch(handleAuthError);
+      auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
   });
-
   googleSigninBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).catch(handleAuthError);
   });
-  
   logoutBtn.addEventListener('click', () => auth.signOut());
-  
   enterVoidBtn.addEventListener('click', () => findPartner());
-  
   nextBtn.addEventListener('click', () => {
     resetState();
     findPartner();
   });
-
   messageForm.addEventListener('submit', (e) => {
     e.preventDefault();
     sendMessage(messageInput.value);
@@ -450,8 +474,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('beforeunload', () => {
-      if (userId) db.ref(`waitingRoom/${userId}`).remove();
-      if (chatRoomId) db.ref(`chatRooms/${chatRoomId}`).remove();
+      if (sessionId) db.ref(`queue/${sessionId}`).remove();
+      if (chatRoomId) db.ref(`rooms/${chatRoomId}`).remove();
   });
 });
 </script>
