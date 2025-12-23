@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,7 +8,7 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Firebase SDKs CDN -->
+  <!-- Firebase SDKs CDN (Compat Version 9.6.1) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -77,8 +76,14 @@
 <body class="bg-black text-white w-screen h-screen overflow-hidden">
   <div class="animated-stars"></div>
 
+  <!-- Loading Overlay (Global) -->
+  <div id="loading-overlay" class="hidden absolute inset-0 bg-black/70 backdrop-blur-sm flex-col items-center justify-center z-50">
+    <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
+    <p id="loading-msg" class="text-xl text-cyan-400 tracking-wider mt-4">Verificando login...</p>
+  </div>
+
   <!-- Login Screen -->
-  <div id="login-screen" class="w-full h-full flex items-center justify-center p-4 relative z-10">
+  <div id="login-screen" class="hidden w-full h-full flex items-center justify-center p-4 relative z-10">
     <div class="w-full max-w-md bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 neon-border-cyan space-y-6">
       <div class="text-center">
         <h1 class="text-4xl font-black text-white neon-text-green">VOID CHAT</h1>
@@ -109,11 +114,6 @@
           Entrar com Google
       </button>
     </div>
-    <!-- Loading state overlay for login screen -->
-    <div id="login-loading-overlay" class="hidden absolute inset-0 bg-black/70 backdrop-blur-sm flex-col items-center justify-center z-20">
-      <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
-      <p id="status-msg" class="text-xl text-cyan-400 tracking-wider mt-4">Verificando login...</p>
-    </div>
   </div>
 
   <!-- Entry/Scanning Screen -->
@@ -134,7 +134,7 @@
   </div>
 
   <!-- Chat Screen -->
-  <main id="chat-screen" class="hidden w-full h-full p-4 gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+  <main id="chat-screen" class="hidden w-full h-screen p-4 flex gap-4 font-orbitron bg-black relative overflow-hidden z-10">
     <!-- Left Sidebar -->
     <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
       <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">STATUS</h2>
@@ -169,7 +169,7 @@
         <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
           <!-- Messages will be injected here -->
         </div>
-        <footer class="p-3 border-t border-gray-700/50">
+        <footer class="p-3 border-t border-gray-700/50 bg-black/50">
           <form id="message-form" class="flex items-center gap-3">
             <input type="text" id="message-input" placeholder="Digite no Vazio..." autocomplete="off" class="flex-1 bg-black/50 border border-cyan-500/50 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white transition-all">
             <button type="submit" id="send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-4 rounded-md transition-colors">
@@ -201,15 +201,20 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Iframe check to prevent disallowed_useragent error
-  if (window.self !== window.top) {
-    document.body.innerHTML = `
-      <div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center">
-        <h1 class="text-2xl font-bold">ERRO: Este aplicativo não pode ser executado em um iframe.</h1>
-      </div>
-    `;
-    return;
+  // Iframe check to prevent disallowed_useragent error with Google Auth
+  try {
+    if (window.self !== window.top) {
+        document.body.innerHTML = `
+        <div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center">
+            <h1 class="text-2xl font-bold">ERRO: Este aplicativo não pode ser executado em um iframe.</h1>
+        </div>
+        `;
+        return;
+    }
+  } catch (e) {
+    console.warn("Iframe check failed, might be due to cross-origin policies. Proceeding with caution.");
   }
+
 
   // ---=== FIREBASE CONFIGURATION ===---
   const firebaseConfig = {
@@ -217,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     authDomain: "meuchatreal.firebaseapp.com",
     databaseURL: "https://meuchatreal-default-rtdb.firebaseio.com",
     projectId: "meuchatreal",
-    storageBucket: "meuchatreal.firebasestorage.app",
+    storageBucket: "meuchatreal.appspot.com",
     messagingSenderId: "271430524108",
     appId: "1:271430524108:web:e23b8c36a188f150467669"
   };
@@ -230,16 +235,16 @@ document.addEventListener('DOMContentLoaded', () => {
     auth = firebase.auth();
   } catch (e) {
     console.error("Firebase initialization failed.", e);
-    alert("Erro fatal na configuração do Firebase.");
+    document.body.innerHTML = `<div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center"><h1 class="text-2xl font-bold">ERRO CRÍTICO: Falha na inicialização do Firebase. Verifique a configuração.</h1></div>`;
     return;
   }
 
   // ---=== DOM ELEMENTS ===---
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const loadingMsg = document.getElementById('loading-msg');
   const loginScreen = document.getElementById('login-screen');
   const entryScreen = document.getElementById('entry-screen');
   const chatScreen = document.getElementById('chat-screen');
-  const loginLoadingOverlay = document.getElementById('login-loading-overlay');
-  const statusMsg = document.getElementById('status-msg');
   
   const loginForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
@@ -260,8 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const onlineUsersEl = document.getElementById('online-users');
 
   // ---=== STATE VARIABLES ===---
-  let userId = null;
-  let userProfile = null;
+  let currentUser = null;
   let sessionId = null;
   let chatRoomId = null;
   let partnerId = null;
@@ -272,12 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---=== UI HELPER FUNCTIONS ===---
   const setLoadingState = (isLoading, message = '') => {
       if (isLoading) {
-          statusMsg.textContent = message;
-          loginLoadingOverlay.classList.remove('hidden');
-          loginLoadingOverlay.classList.add('flex');
+          loadingMsg.textContent = message;
+          loadingOverlay.classList.remove('hidden');
+          loadingOverlay.classList.add('flex');
       } else {
-          loginLoadingOverlay.classList.add('hidden');
-          loginLoadingOverlay.classList.remove('flex');
+          loadingOverlay.classList.add('hidden');
+          loadingOverlay.classList.remove('flex');
       }
   };
 
@@ -285,23 +289,37 @@ document.addEventListener('DOMContentLoaded', () => {
     loginScreen.classList.add('hidden');
     entryScreen.classList.add('hidden');
     chatScreen.classList.add('hidden');
-    if(view === 'login') loginScreen.classList.remove('hidden');
+    
+    loginScreen.style.display = 'none';
+    entryScreen.style.display = 'none';
+    chatScreen.style.display = 'none';
+
+    if(view === 'login') {
+      loginScreen.classList.remove('hidden');
+      loginScreen.style.display = 'flex';
+    }
     if(view === 'entry') {
+        entryScreen.classList.remove('hidden');
         entryScreen.style.display = 'flex';
         entryContent.classList.remove('hidden');
-        scanningContent.style.display = 'none';
+        scanningContent.classList.add('hidden');
     }
     if(view === 'scanning') {
+        entryScreen.classList.remove('hidden');
         entryScreen.style.display = 'flex';
         entryContent.classList.add('hidden');
+        scanningContent.classList.remove('hidden');
         scanningContent.style.display = 'flex';
     }
-    if(view === 'chat') chatScreen.style.display = 'flex';
+    if(view === 'chat') {
+      chatScreen.classList.remove('hidden');
+      chatScreen.style.display = 'flex';
+    }
   };
   
   const addMessageToUI = (message) => {
-    if (!message || !message.senderId) return; // Defensive check
-    const isMe = message.senderId === userId;
+    if (!message || !message.senderId || !currentUser) return;
+    const isMe = message.senderId === currentUser.uid;
     const messageDiv = document.createElement('div');
     messageDiv.className = `flex fade-in ${isMe ? 'justify-end' : 'justify-start'}`;
     messageDiv.innerHTML = `
@@ -314,13 +332,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   const resetState = () => {
+    console.log("Resetting state...");
     if (roomRef) {
         if (messagesListener) roomRef.child('messages').off('child_added', messagesListener);
         if (roomValueListener) roomRef.off('value', roomValueListener);
-        roomRef.remove();
+        roomRef.remove().catch(e => console.warn("Error removing room:", e.message));
+        roomRef.onDisconnect().cancel();
     }
     if (sessionId) {
-        db.ref(`queue/${sessionId}`).remove();
+        db.ref(`queue/${sessionId}`).remove().catch(e => console.warn("Error removing from queue:", e.message));
         sessionId = null;
     }
     chatRoomId = null;
@@ -332,53 +352,42 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   // ---=== AUTHENTICATION LOGIC ===---
-  const syncUserProfile = async (user) => {
-    const userRef = db.ref(`users/${user.uid}`);
-    const snapshot = await userRef.get();
-    if (!snapshot.exists()) {
-      userProfile = { isPremium: false, credits: 0, email: user.email };
-      await userRef.set(userProfile);
-    } else {
-      userProfile = snapshot.val();
-    }
-  };
-
   const handleAuthError = (error) => {
     setLoadingState(false);
+    let message = 'Ocorreu um erro. Tente novamente.';
     switch (error.code) {
         case 'auth/user-not-found':
-        case 'auth/wrong-password': authErrorEl.textContent = 'Email ou senha inválidos.'; break;
-        case 'auth/email-already-in-use': authErrorEl.textContent = 'Este email já está em uso.'; break;
-        case 'auth/weak-password': authErrorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; break;
+        case 'auth/wrong-password': message = 'Email ou senha inválidos.'; break;
+        case 'auth/email-already-in-use': message = 'Este email já está em uso.'; break;
+        case 'auth/weak-password': message = 'A senha deve ter pelo menos 6 caracteres.'; break;
         case 'auth/account-exists-with-different-credential':
-            authErrorEl.textContent = 'Uma conta já existe com este email.';
-            break;
-        default: authErrorEl.textContent = 'Ocorreu um erro. Tente novamente.'; break;
+            message = 'Uma conta já existe com este email. Tente logar com o Google.'; break;
     }
+    authErrorEl.textContent = message;
+    console.error("Auth Error:", error);
   };
   
   setLoadingState(true, 'Verificando login...');
-  auth.getRedirectResult().catch(handleAuthError);
+  auth.getRedirectResult().catch(handleAuthError).finally(() => setLoadingState(false));
 
-  auth.onAuthStateChanged(async (user) => {
+  auth.onAuthStateChanged((user) => {
     if (user) {
-      setLoadingState(true, 'Conectando ao banco de dados...');
-      userId = user.uid;
-      await syncUserProfile(user);
+      console.log("User is signed in:", user.uid);
+      currentUser = user;
       showView('entry');
-      setLoadingState(false);
     } else {
-      userId = null;
-      userProfile = null;
+      console.log("User is signed out.");
+      currentUser = null;
       resetState();
       showView('login');
-      setLoadingState(false);
     }
+    setLoadingState(false);
   });
 
   // ---=== CORE LOGIC: MATCHMAKING & CHAT ===---
-  const findPartner = () => {
-    console.log("Buscando usuários...");
+  const findPartner = async () => {
+    if (!currentUser) return;
+    console.log("Looking for a partner...");
     showView('scanning');
     
     const queueRef = db.ref('queue');
@@ -386,85 +395,81 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionId = myQueueEntryRef.key;
 
     myQueueEntryRef.onDisconnect().remove();
+    await myQueueEntryRef.set({
+      userId: currentUser.uid,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
 
-    const myQueueData = {
-        userId: userId,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
+    const onPartnerFound = (partnerSessionId, partnerUserId) => {
+        const sortedIds = [currentUser.uid, partnerUserId].sort();
+        chatRoomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
+        
+        const roomMembers = {
+          [currentUser.uid]: true,
+          [partnerUserId]: true
+        };
+
+        const roomData = {
+          members: roomMembers,
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        roomRef = db.ref(`rooms/${chatRoomId}`);
+        roomRef.set(roomData).then(() => {
+          // Clean up queue entries
+          db.ref(`queue/${partnerSessionId}`).remove();
+          myQueueEntryRef.onDisconnect().cancel();
+          myQueueEntryRef.remove();
+          sessionId = null;
+          startChat(partnerUserId);
+        }).catch(err => {
+            console.error("Failed to create room:", err);
+            resetState();
+            showView('entry');
+        });
     };
 
-    queueRef.transaction(currentQueue => {
-        if (currentQueue === null) {
-            let newQueue = {};
-            newQueue[sessionId] = myQueueData;
-            return newQueue;
-        }
+    const queueListener = queueRef.on('value', snapshot => {
+        const queue = snapshot.val();
+        if (!queue) return;
 
-        const partnerSessionId = Object.keys(currentQueue).find(id => id !== sessionId);
+        const otherUsers = Object.entries(queue).filter(([key, val]) => val.userId !== currentUser.uid);
 
-        if (partnerSessionId) {
-            console.log("Usuário encontrado!");
-            partnerId = currentQueue[partnerSessionId].userId;
-            delete currentQueue[partnerSessionId];
-            return currentQueue;
-        } else {
-            currentQueue[sessionId] = myQueueData;
-            return currentQueue;
+        if (otherUsers.length > 0) {
+            queueRef.off('value', queueListener); // Stop listening once we found someone
+            const [partnerSessionId, partnerData] = otherUsers[0];
+            onPartnerFound(partnerSessionId, partnerData.userId);
         }
-    }, (error, committed) => {
-        if (error) {
-            console.error("Matchmaking transaction failed:", error);
-            alert('Ocorreu um erro de conexão. Tente novamente.');
-            myQueueEntryRef.onDisconnect().cancel();
+    });
+
+    // Timeout to prevent waiting forever
+    setTimeout(() => {
+        queueRef.off('value', queueListener);
+        if (!chatRoomId && sessionId) {
+            console.log("Matchmaking timed out.");
+            alert("Não foi possível encontrar um parceiro. Tente novamente.");
+            db.ref(`queue/${sessionId}`).remove();
+            sessionId = null;
             showView('entry');
-        } else if (committed) {
-            if (partnerId) {
-                myQueueEntryRef.onDisconnect().cancel();
-                console.log("Criando sala...");
-
-                const roomIdParts = [userId, partnerId].sort();
-                chatRoomId = `room_${roomIdParts[0]}_${roomIdParts[1]}`;
-                
-                roomRef = db.ref(`rooms/${chatRoomId}`);
-                roomRef.set({ members: { [userId]: true, [partnerId]: true } });
-                roomRef.onDisconnect().remove();
-                startChat();
-            } else {
-                console.log("Adicionado à fila. Aguardando outro usuário...");
-                listenForMyRoom();
-            }
         }
-    });
+    }, 30000); // 30 seconds timeout
   };
 
-  const listenForMyRoom = () => {
-    const roomsRef = db.ref('rooms');
-    roomsRef.on('child_added', (roomSnapshot) => {
-        const roomData = roomSnapshot.val();
-        if (roomData && roomData.members && roomData.members[userId]) {
-            console.log("Sala encontrada! Conectando...");
-            roomsRef.off();
+  const startChat = (pId) => {
+    if (!currentUser || !chatRoomId) return;
+    partnerId = pId;
+    console.log(`Starting chat with ${partnerId} in room ${chatRoomId}`);
+    roomRef = db.ref(`rooms/${chatRoomId}`);
+    roomRef.onDisconnect().remove(); // Clean up room if this user disconnects
 
-            if(sessionId) {
-                const myQueueEntryRef = db.ref(`queue/${sessionId}`);
-                myQueueEntryRef.onDisconnect().cancel();
-                myQueueEntryRef.remove();
-            }
-            
-            chatRoomId = roomSnapshot.key;
-            partnerId = Object.keys(roomData.members).find(id => id !== userId);
-            roomRef = db.ref(`rooms/${chatRoomId}`);
-            roomRef.onDisconnect().remove();
-            
-            startChat();
-        }
-    });
-  };
-
-  const startChat = () => {
     showView('chat');
+    
+    // Listen for new messages
     messagesListener = roomRef.child('messages').on('child_added', (snapshot) => addMessageToUI(snapshot.val()));
+    
+    // Listen for partner disconnection
     roomValueListener = roomRef.on('value', (snapshot) => {
-      if (!snapshot.exists()) {
+      if (!snapshot.exists() || !snapshot.val().members || !snapshot.val().members[partnerId]) {
         alert('O estranho se desconectou.');
         resetState();
         showView('entry');
@@ -476,9 +481,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const sendMessage = (text) => {
-    if (text.trim() === '' || !roomRef) return;
+    if (text.trim() === '' || !roomRef || !currentUser) return;
     roomRef.child('messages').push({
-      senderId: userId,
+      senderId: currentUser.uid,
       text: text,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     });
@@ -489,37 +494,41 @@ document.addEventListener('DOMContentLoaded', () => {
   loginBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
       setLoadingState(true, 'Autenticando...');
-      auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
+      auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError);
   });
   signupBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
       setLoadingState(true, 'Criando conta...');
-      auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
+      auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError);
   });
   googleSigninBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
       setLoadingState(true, 'Redirecionando para o Google...');
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithRedirect(provider);
+      auth.signInWithRedirect(provider).catch(handleAuthError);
   });
   logoutBtn.addEventListener('click', () => auth.signOut());
-  enterVoidBtn.addEventListener('click', () => findPartner());
+  enterVoidBtn.addEventListener('click', findPartner);
+  
   nextBtn.addEventListener('click', () => {
     resetState();
     findPartner();
   });
+  
   messageForm.addEventListener('submit', (e) => {
     e.preventDefault();
     sendMessage(messageInput.value);
     messageInput.value = '';
+    messageInput.focus();
   });
 
+  // Final cleanup on window close
   window.addEventListener('beforeunload', () => {
-      if (sessionId) db.ref(`queue/${sessionId}`).remove();
-      if (chatRoomId) db.ref(`rooms/${chatRoomId}`).remove();
+      if(currentUser){
+        resetState();
+      }
   });
 });
 </script>
 
 </body>
-</html>
