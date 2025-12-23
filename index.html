@@ -109,6 +109,11 @@
           Entrar com Google
       </button>
     </div>
+    <!-- Loading state overlay for login screen -->
+    <div id="login-loading-overlay" class="hidden absolute inset-0 bg-black/70 backdrop-blur-sm flex-col items-center justify-center z-20">
+      <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
+      <p id="status-msg" class="text-xl text-cyan-400 tracking-wider mt-4">Verificando login...</p>
+    </div>
   </div>
 
   <!-- Entry/Scanning Screen -->
@@ -223,6 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginScreen = document.getElementById('login-screen');
   const entryScreen = document.getElementById('entry-screen');
   const chatScreen = document.getElementById('chat-screen');
+  const loginLoadingOverlay = document.getElementById('login-loading-overlay');
+  const statusMsg = document.getElementById('status-msg');
   
   const loginForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
@@ -253,6 +260,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let roomValueListener = null;
 
   // ---=== UI HELPER FUNCTIONS ===---
+  const setLoadingState = (isLoading, message = '') => {
+      if (isLoading) {
+          statusMsg.textContent = message;
+          loginLoadingOverlay.classList.remove('hidden');
+          loginLoadingOverlay.classList.add('flex');
+      } else {
+          loginLoadingOverlay.classList.add('hidden');
+          loginLoadingOverlay.classList.remove('flex');
+      }
+  };
+
   const showView = (view) => {
     loginScreen.classList.add('hidden');
     entryScreen.classList.add('hidden');
@@ -304,19 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   // ---=== AUTHENTICATION LOGIC ===---
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      userId = user.uid;
-      await syncUserProfile(user);
-      showView('entry');
-    } else {
-      userId = null;
-      userProfile = null;
-      resetState();
-      showView('login');
-    }
-  });
-
   const syncUserProfile = async (user) => {
     const userRef = db.ref(`users/${user.uid}`);
     const snapshot = await userRef.get();
@@ -329,15 +334,38 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleAuthError = (error) => {
+    setLoadingState(false);
     switch (error.code) {
         case 'auth/user-not-found':
         case 'auth/wrong-password': authErrorEl.textContent = 'Email ou senha inválidos.'; break;
         case 'auth/email-already-in-use': authErrorEl.textContent = 'Este email já está em uso.'; break;
         case 'auth/weak-password': authErrorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; break;
+        case 'auth/account-exists-with-different-credential':
+            authErrorEl.textContent = 'Uma conta já existe com este email.';
+            break;
         default: authErrorEl.textContent = 'Ocorreu um erro. Tente novamente.'; break;
     }
   };
   
+  setLoadingState(true, 'Verificando login...');
+  auth.getRedirectResult().catch(handleAuthError);
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      setLoadingState(true, 'Conectando ao banco de dados...');
+      userId = user.uid;
+      await syncUserProfile(user);
+      showView('entry');
+      setLoadingState(false);
+    } else {
+      userId = null;
+      userProfile = null;
+      resetState();
+      showView('login');
+      setLoadingState(false);
+    }
+  });
+
   // ---=== CORE LOGIC: MATCHMAKING & CHAT ===---
   const findPartner = () => {
     console.log("Buscando usuários...");
@@ -450,16 +478,19 @@ document.addEventListener('DOMContentLoaded', () => {
   loginForm.addEventListener('submit', (e) => e.preventDefault());
   loginBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
+      setLoadingState(true, 'Autenticando...');
       auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
   });
   signupBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
+      setLoadingState(true, 'Criando conta...');
       auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value).catch(handleAuthError);
   });
   googleSigninBtn.addEventListener('click', () => {
       authErrorEl.textContent = '';
+      setLoadingState(true, 'Redirecionando para o Google...');
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(handleAuthError);
+      auth.signInWithRedirect(provider);
   });
   logoutBtn.addEventListener('click', () => auth.signOut());
   enterVoidBtn.addEventListener('click', () => findPartner());
