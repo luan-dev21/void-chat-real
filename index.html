@@ -213,7 +213,7 @@
 
             <!-- Card 3: Private Chat -->
             <div id="private-chat-card" class="relative bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
-                <div id="private-chat-notification" class="hidden absolute top-3 right-3 w-4 h-4 bg-red-500 rounded-full border-2 border-black notification-dot"></div>
+                <div id="private-chat-notification" class="hidden absolute top-3 right-3 w-4 h-4 bg-red-600 rounded-full border-2 border-black notification-dot"></div>
                 <i class="fas fa-user-secret text-4xl text-cyan-400 mb-4"></i>
                 <h2 class="text-2xl font-bold text-white">CHAT PRIVADO</h2>
                 <p class="text-gray-400 text-sm mt-2">Inicie conversas diretas com seus contatos.</p>
@@ -233,7 +233,7 @@
                     <button id="notifications-btn" class="text-2xl text-cyan-400 hover:text-white transition-colors">
                         <i class="fas fa-bell"></i>
                     </button>
-                    <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-black notification-dot"></span>
+                    <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
                 </div>
             </div>
             <button class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let privateMessagesListener = null;
   let contactsListener = null;
   let presenceListener = null;
-  let unreadListener = null;
+  let notificationListener = null;
   let friendRequestListener = null;
   let sentRequestListener = null;
   let receivedFriendRequests = {};
@@ -637,10 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const listenForUnreadMessages = (user) => {
-      const unreadRef = db.ref(`users/${user.uid}/unread_messages`);
-      if (unreadListener) unreadRef.off('value', unreadListener);
-      unreadListener = unreadRef.on('value', snapshot => {
+  const listenForNotifications = (user) => {
+      const notificationsRef = db.ref(`notifications/${user.uid}`);
+      if (notificationListener) notificationsRef.off('value', notificationListener);
+      notificationListener = notificationsRef.on('value', snapshot => {
           privateChatNotification.classList.toggle('hidden', !snapshot.exists());
       });
   };
@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isProfileComplete) {
       populateHomePage(profile);
       managePresence(user);
-      listenForUnreadMessages(user);
+      listenForNotifications(user);
       listenForFriendRequests(user);
       showView('home');
     } else {
@@ -885,16 +885,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const enterContactsScreen = () => {
       showView('contacts');
       if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
+      
       contactsListener = db.ref(`users/${currentUser.uid}/contacts`).on('value', (contactSnapshot) => {
           const contactIds = Object.keys(contactSnapshot.val() || {});
+          
           if (presenceListener) db.ref('presence').off('value', presenceListener);
-          presenceListener = db.ref('presence').on('value', (presenceSnapshot) => {
-              renderContactsList(contactIds, presenceSnapshot.val() || {});
+          const presenceRef = db.ref('presence');
+          presenceListener = presenceRef.on('value', (presenceSnapshot) => {
+              
+              if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
+              const notificationsRef = db.ref(`notifications/${currentUser.uid}`);
+              notificationListener = notificationsRef.on('value', (notificationSnapshot) => {
+                renderContactsList(contactIds, presenceSnapshot.val() || {}, notificationSnapshot.val() || {});
+              });
           });
       });
   };
 
-  const renderContactsList = async (contactIds, onlineUids) => {
+  const renderContactsList = async (contactIds, onlineUids, notifications) => {
       contactsList.innerHTML = '';
       if (contactIds.length === 0) {
         contactsList.innerHTML = `<p class="text-gray-500 text-center mt-8">Adicione amigos para começar.</p>`;
@@ -904,10 +912,24 @@ document.addEventListener('DOMContentLoaded', () => {
           const userSnap = await db.ref(`users/${friendId}`).once('value');
           const friendProfile = userSnap.val();
           if (!friendProfile) continue;
+          
           const isOnline = onlineUids[friendId] === true;
+          const hasUnread = notifications[friendId] === true;
+
           const contactEl = document.createElement('div');
           contactEl.className = 'flex items-center justify-between gap-4 p-3 rounded-lg hover:bg-cyan-500/20 cursor-pointer';
-          contactEl.innerHTML = `<div class="flex items-center gap-4"><img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full"><div><p class="font-bold text-lg">${friendProfile.username}</p><p class="text-xs ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div></div><i class="fas fa-comment-dots text-cyan-400"></i>`;
+          contactEl.innerHTML = `
+            <div class="flex items-center gap-4">
+                <img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full">
+                <div>
+                    <p class="font-bold text-lg">${friendProfile.username}</p>
+                    <p class="text-xs ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                ${hasUnread ? '<div class="w-3 h-3 bg-red-600 rounded-full notification-dot"></div>' : ''}
+                <i class="fas fa-comment-dots text-cyan-400"></i>
+            </div>`;
           contactEl.addEventListener('click', () => startPrivateChat(friendId, friendProfile));
           contactsList.appendChild(contactEl);
       }
@@ -916,6 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaveContactsScreen = () => {
     if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
     if (presenceListener) db.ref('presence').off('value', presenceListener);
+    if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
   };
 
   const startPrivateChat = (friendId, friendProfile) => {
@@ -932,7 +955,9 @@ document.addEventListener('DOMContentLoaded', () => {
           privateChatPartnerStatus.className = `text-xs ${snap.exists() ? 'text-green-400 neon-text-green' : 'text-red-500 neon-text-red'}`;
       });
       
-      db.ref(`users/${currentUser.uid}/unread_messages/${privateChatRoomId}`).remove();
+      // Clear notification for this specific chat
+      db.ref(`notifications/${currentUser.uid}/${friendId}`).remove();
+      
       privateChatContainer.innerHTML = '';
       const messagesRef = db.ref(`private_messages/${privateChatRoomId}/messages`).limitToLast(100);
       privateMessagesListener = messagesRef.on('child_added', snap => addMessageToUI(snap.val(), privateChatContainer));
@@ -949,7 +974,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (text.trim() === '' || !privateChatRoomId || !currentPrivateChatFriend) return;
       const messageData = { senderId: currentUser.uid, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
       db.ref(`private_messages/${privateChatRoomId}/messages`).push(messageData);
-      db.ref(`users/${currentPrivateChatFriend.id}/unread_messages/${privateChatRoomId}`).set(true);
+      // Create a notification for the recipient
+      db.ref(`notifications/${currentPrivateChatFriend.id}/${currentUser.uid}`).set(true);
   };
   
   // Generic Message Renderer
