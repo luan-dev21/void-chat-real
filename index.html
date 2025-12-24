@@ -147,7 +147,7 @@
 
   <!-- Profile Creation Modal -->
   <div id="profile-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-      <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan animate-pulse space-y-6">
+      <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan space-y-6">
           <div class="text-center">
               <h1 class="text-3xl font-bold text-white neon-text-green">COMPLETE SEU PERFIL</h1>
               <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade para mergulhar no Vazio.</p>
@@ -571,10 +571,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const showView = (view) => {
-    document.querySelectorAll('main, div[id$="-screen"], div[id$="-modal"]').forEach(el => {
-        el.classList.add('hidden');
-        el.style.display = 'none';
+    // A little more robust way to hide all screens/modals
+    ['login-screen', 'home-screen', 'entry-screen', 'chat-screen', 'global-chat-screen', 
+     'contacts-screen', 'private-chat-screen', 'profile-modal', 'notifications-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.classList.add('hidden');
+            el.style.display = 'none'; // Ensure it's fully hidden
+        }
     });
+    
     const viewMap = {
       login: loginScreen, home: homeScreen, scanning: entryScreen,
       chat: chatScreen, 'global-chat': globalChatScreen,
@@ -582,7 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     if(viewMap[view]) {
       viewMap[view].classList.remove('hidden');
-      viewMap[view].style.display = 'flex';
+      // Use flex for all main views for consistency
+      viewMap[view].style.display = 'flex'; 
     }
   };
   
@@ -648,33 +655,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkUserProfile = async (user) => {
     const userRef = db.ref(`users/${user.uid}`);
     const snapshot = await userRef.once('value');
-    let profile = snapshot.val() || {};
+    const profile = snapshot.val();
     
-    const contactsSnapshot = await db.ref(`users/${user.uid}/contacts`).once('value');
-    profile.contacts = contactsSnapshot.val() || {};
-    currentUserProfile = profile;
-
-    const isProfileComplete = profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
+    // Check if profile exists and is complete
+    const isProfileComplete = profile && profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
 
     if (isProfileComplete) {
+      // Fetch contacts separately to ensure profile object is complete
+      const contactsSnapshot = await db.ref(`users/${user.uid}/contacts`).once('value');
+      profile.contacts = contactsSnapshot.val() || {};
+      currentUserProfile = profile;
+      
       populateHomePage(profile);
       managePresence(user);
       listenForNotifications(user);
       listenForFriendRequests(user);
       showView('home');
     } else {
+      // Profile is incomplete or doesn't exist, show modal
       showProfileModal(true);
     }
     setLoadingState(false);
   };
   
   const startApp = () => {
-    setLoadingState(true, 'Verificando login...');
+    setLoadingState(true, 'Verificando sessão...');
     auth.getRedirectResult().catch(handleAuthError);
 
     auth.onAuthStateChanged((user) => {
         if (user) {
-            if (currentUser && currentUser.uid === user.uid) return; // Already logged in
+            if (currentUser && currentUser.uid === user.uid) return; // Already logged in and processed
             currentUser = user;
             checkUserProfile(user);
         } else {
@@ -687,14 +697,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  // ---=== CRITICAL: Set Persistence FIRST ===---
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .then(() => {
         // Firebase will now attempt to persist the user's session.
-        // We can now start the application logic.
+        // We can now initialize the rest of the app logic.
         startApp();
     })
     .catch((error) => {
-        // Handle Errors here.
         console.error("Error setting persistence:", error);
         // Start the app anyway with default (session) persistence.
         startApp();
@@ -787,7 +797,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectedRef = db.ref('.info/connected');
     const userStatusRef = db.ref(`global_online/${currentUser.uid}`);
     
-    // Use a separate on 'value' listener for global presence that isn't turned off elsewhere
     connectedRef.on('value', (snap) => {
         if(snap.val()) {
             userStatusRef.set({ username: currentUserProfile.username, avatar: currentUserProfile.avatar });
@@ -805,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaveGlobalChat = () => {
     if (globalMessagesListener) db.ref('global_messages').off('child_added', globalMessagesListener);
     if (globalOnlineListener) db.ref('global_online').off('value', globalOnlineListener);
-    // onDisconnect will handle removal. We can also remove manually for faster UI feedback if needed.
     db.ref(`global_online/${currentUser.uid}`).remove();
     showView('home');
   };
@@ -887,7 +895,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updates[`/friend_requests/${currentUser.uid}/${requesterId}`] = null;
     updates[`/sent_friend_requests/${requesterId}/${currentUser.uid}`] = null;
     await db.ref().update(updates);
-    currentUserProfile.contacts[requesterId] = true;
+    if(currentUserProfile.contacts) {
+      currentUserProfile.contacts[requesterId] = true;
+    }
   };
   
   const declineFriendRequest = async (requesterId) => {
@@ -971,7 +981,6 @@ document.addEventListener('DOMContentLoaded', () => {
           privateChatPartnerStatus.className = `text-xs ${snap.exists() ? 'text-green-400 neon-text-green' : 'text-red-500 neon-text-red'}`;
       });
       
-      // Clear notification for this specific chat
       db.ref(`notifications/${currentUser.uid}/${friendId}`).remove();
       
       privateChatContainer.innerHTML = '';
@@ -982,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const leavePrivateChat = () => {
       if (privateMessagesListener) db.ref(`private_messages/${privateChatRoomId}/messages`).off('child_added', privateMessagesListener);
-      if (presenceListener) db.ref(`presence/${currentPrivateChatFriend.id}`).off('value', presenceListener);
+      if (presenceListener && currentPrivateChatFriend) db.ref(`presence/${currentPrivateChatFriend.id}`).off('value', presenceListener);
       currentPrivateChatFriend = null; privateChatRoomId = null;
   };
 
@@ -990,7 +999,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (text.trim() === '' || !privateChatRoomId || !currentPrivateChatFriend) return;
       const messageData = { senderId: currentUser.uid, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
       db.ref(`private_messages/${privateChatRoomId}/messages`).push(messageData);
-      // Create a notification for the recipient
       db.ref(`notifications/${currentPrivateChatFriend.id}/${currentUser.uid}`).set(true);
   };
   
@@ -1047,9 +1055,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---=== EVENT LISTENERS ===---
   loginForm.addEventListener('submit', (e) => e.preventDefault());
-  loginBtn.addEventListener('click', () => { auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
-  signupBtn.addEventListener('click', () => { auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
-  googleSigninBtn.addEventListener('click', () => { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
+  loginBtn.addEventListener('click', () => { setLoadingState(true, 'Entrando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  googleSigninBtn.addEventListener('click', () => { setLoadingState(true, 'Aguardando Google...'); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
   
   profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1057,10 +1065,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!Object.values(profileData).every(Boolean)) { fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
     fullProfileErrorEl.textContent = '';
     setLoadingState(true, 'Salvando...');
+    
     db.ref(`users/${currentUser.uid}`).set(profileData)
-      .then(() => checkUserProfile(currentUser))
-      .catch((e) => fullProfileErrorEl.textContent = 'Erro ao salvar.')
-      .finally(() => { setLoadingState(false); showProfileModal(false); });
+      .then(() => {
+          console.log('Dados salvos com sucesso!');
+          showProfileModal(false); // Hide modal only on success
+          checkUserProfile(currentUser); // Re-check to proceed to home
+      })
+      .catch((err) => {
+          console.error("Erro ao salvar perfil:", err);
+          alert("Ocorreu um erro ao salvar seu perfil. Tente novamente. Erro: " + err.message);
+          fullProfileErrorEl.textContent = 'Erro ao salvar.';
+          setLoadingState(false);
+      });
   });
 
   userProfileFooter.addEventListener('click', () => showProfileModal(true));
@@ -1095,14 +1112,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('beforeunload', () => {
     // This is a synchronous, best-effort cleanup. The primary, more reliable
     // cleanup is handled by the `onDisconnect()` hooks set up when a user
-    // enters a queue or a room.
+    // enters a queue or a room. This does NOT remove user profile data.
     if(currentUser){
-      // If user is in the matchmaking queue, remove their entry.
       if (sessionId) {
           db.ref(`queue/${sessionId}`).remove();
       }
-      // If user is in a random chat room, remove the entire room.
-      // The other user's client will detect this and re-queue them.
       if (roomRef) {
           roomRef.remove();
       }
