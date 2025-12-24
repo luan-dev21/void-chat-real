@@ -99,30 +99,6 @@
     /* Hide scrollbar */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* VIP Modal Styles */
-    @keyframes premium-border-glow {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    .animated-premium-border {
-        position: relative;
-        padding: 3px;
-        background-color: #000;
-        z-index: 1;
-    }
-    .animated-premium-border::before {
-        content: '';
-        position: absolute;
-        top: 0; right: 0; bottom: 0; left: 0;
-        z-index: -1;
-        margin: -3px; /* equal to padding */
-        border-radius: inherit; /* inherit container's border-radius */
-        background: linear-gradient(90deg, #a855f7, #ffd700, #a855f7);
-        background-size: 200% 200%;
-        animation: premium-border-glow 4s linear infinite;
-    }
   </style>
 </head>
 
@@ -260,7 +236,7 @@
                     <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
                 </div>
             </div>
-            <button id="premium-btn" class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
+            <button class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
                 <i class="fas fa-star mr-2"></i>ATIVAR PREMIUM
             </button>
         </footer>
@@ -440,32 +416,6 @@
         </div>
     </div>
 
-    <!-- VOID VIP Upgrade Modal -->
-    <div id="vip-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-      <div id="vip-modal-backdrop" class="absolute inset-0"></div>
-      <div class="w-full max-w-lg rounded-lg animated-premium-border">
-          <div class="relative bg-black/90 p-8 rounded-lg">
-              <button id="vip-modal-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
-                  <i class="fas fa-times fa-2x"></i>
-              </button>
-              <div class="text-center mb-6">
-                  <h2 class="text-3xl font-black text-white" style="text-shadow: 0 0 8px #a855f7;">UPGRADE DE SISTEMA</h2>
-                  <p class="text-4xl font-black text-purple-400" style="text-shadow: 0 0 5px #a855f7, 0 0 10px #ffd700;">VOID VIP</p>
-              </div>
-              <ul class="space-y-4 text-lg mb-8">
-                  <li class="flex items-center gap-4"><i class="fas fa-gem w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Selo de Elite:</span> Ícone de diamante no Chat Global.</span></li>
-                  <li class="flex items-center gap-4"><i class="fas fa-microphone-alt w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Áudios Ilimitados:</span> Envie quantos áudios quiser.</span></li>
-                  <li class="flex items-center gap-4"><i class="fas fa-filter w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Filtro de Match:</span> Escolha sexo ou região no Random Void.</span></li>
-                  <li class="flex items-center gap-4"><i class="fas fa-shield-alt w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Sem Anúncios:</span> Experiência limpa no Vazio.</span></li>
-                  <li class="flex items-center gap-4"><i class="fas fa-palette w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Cores Customizadas:</span> Mude a cor do seu nome.</span></li>
-              </ul>
-              <button id="vip-modal-action-btn" class="w-full font-bold py-4 px-4 rounded-md text-black bg-purple-500 border-2 border-purple-300 transition-all text-xl uppercase tracking-widest neon-premium-glow hover:bg-purple-400">
-                  Adquirir Acesso Agora
-              </button>
-          </div>
-      </div>
-    </div>
-
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -517,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const contactsScreen = document.getElementById('contacts-screen');
   const privateChatScreen = document.getElementById('private-chat-screen');
   const notificationsModal = document.getElementById('notifications-modal');
-  const vipModal = document.getElementById('vip-modal');
   
   const loginForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
@@ -579,12 +528,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const notificationsCloseBtn = document.getElementById('notifications-close-btn');
   const notificationsList = document.getElementById('notifications-list');
 
-  // VIP Modal Elements
-  const premiumBtn = document.getElementById('premium-btn');
-  const vipModalBackdrop = document.getElementById('vip-modal-backdrop');
-  const vipModalCloseBtn = document.getElementById('vip-modal-close-btn');
-  const vipModalActionBtn = document.getElementById('vip-modal-action-btn');
-
 
   // ---=== STATE VARIABLES ===---
   let currentUser = null;
@@ -628,10 +571,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const showView = (view) => {
+    // A little more robust way to hide all screens/modals
     ['login-screen', 'home-screen', 'entry-screen', 'chat-screen', 'global-chat-screen', 
-     'contacts-screen', 'private-chat-screen'].forEach(id => {
+     'contacts-screen', 'private-chat-screen', 'profile-modal', 'notifications-modal'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.classList.add('hidden');
+        if(el) {
+            el.classList.add('hidden');
+            el.style.display = 'none'; // Ensure it's fully hidden
+        }
     });
     
     const viewMap = {
@@ -641,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     if(viewMap[view]) {
       viewMap[view].classList.remove('hidden');
+      // Use flex for all main views for consistency
       viewMap[view].style.display = 'flex'; 
     }
   };
@@ -648,11 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const showProfileModal = (show) => {
     profileModal.style.display = show ? 'flex' : 'none';
     profileModal.classList.toggle('hidden', !show);
-  };
-
-  const showVipModal = (show) => {
-    vipModal.style.display = show ? 'flex' : 'none';
-    vipModal.classList.toggle('hidden', !show);
   };
   
   const showNotificationsModal = (show) => {
@@ -674,6 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
       userRegionHome.textContent = profile.region;
   };
   
+  // --- RULE 2 (part 2): New function to pre-fill the modal ---
   const populateProfileModal = (profile) => {
       if (!profile) return;
       usernameInput.value = profile.username || '';
@@ -681,19 +625,6 @@ document.addEventListener('DOMContentLoaded', () => {
       regionSelect.value = profile.region || '';
       interestsInput.value = profile.interests || '';
       avatarInput.value = profile.avatar || '';
-  };
-  
-  const updatePremiumStatus = (profile) => {
-      const isPremium = profile && profile.isPremium === true;
-      if (isPremium) {
-          premiumBtn.innerHTML = `<i class="fas fa-crown mr-2"></i>CONTA VIP`;
-          premiumBtn.disabled = true;
-          premiumBtn.classList.add('neon-premium-glow');
-      } else {
-          premiumBtn.innerHTML = `<i class="fas fa-star mr-2"></i>ATIVAR PREMIUM`;
-          premiumBtn.disabled = false;
-          premiumBtn.classList.add('neon-premium-glow'); // Keep glow for non-premium too
-      }
   };
   
   // ---=== AUTHENTICATION & PROFILE LOGIC ===---
@@ -736,7 +667,10 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.getRedirectResult().catch(handleAuthError);
 
     auth.onAuthStateChanged((user) => {
-      if (currentUser) db.ref().off();
+      // Clean up listeners for previous user to prevent memory leaks on logout
+      if (currentUser) {
+        db.ref().off();
+      }
       
       if (user) {
         currentUser = user;
@@ -751,12 +685,14 @@ document.addEventListener('DOMContentLoaded', () => {
             profile.contacts = contactsSnapshot.val() || {};
             currentUserProfile = profile;
             
+            // --- RULE 2: Populate footer AND modal on initial load ---
             updateUI(currentUserProfile);
             populateProfileModal(currentUserProfile);
-            updatePremiumStatus(currentUserProfile);
             
+            showProfileModal(false);
             showView('home');
 
+            // Initialize persistent real-time services
             managePresence(user);
             listenForNotifications(user);
             listenForFriendRequests(user);
@@ -770,6 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setLoadingState(false);
           showView('login');
         });
+
       } else {
         currentUser = null;
         currentUserProfile = null;
@@ -780,7 +717,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => startApp())
+    .then(() => {
+        startApp();
+    })
     .catch((error) => {
         console.error("Error setting persistence:", error);
         startApp();
@@ -1080,10 +1019,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const sendMessage = (text) => {
     if (text.trim() === '' || !chatRoomId || !roomRef || !currentUser) return;
-    const messageData = { senderId: currentUser.uid, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
+    const messageData = {
+        senderId: currentUser.uid,
+        text: text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
     roomRef.child('messages').push(messageData);
   };
   
+  // Generic Message Renderer
   const addMessageToUI = (message, container, participants = null) => {
     if (!message || !currentUser || !container) return;
     const isMe = message.senderId === currentUser.uid;
@@ -1141,15 +1085,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     db.ref(`users/${currentUser.uid}`).update(profileData)
       .then(async () => {
+          console.log('Dados salvos com sucesso!');
           const wasFirstTimeSetup = !currentUserProfile;
+          
           const contactsSnapshot = await db.ref(`users/${currentUser.uid}/contacts`).once('value');
-          // Important: Preserve existing premium status when updating profile
-          const isPremium = currentUserProfile ? currentUserProfile.isPremium : false;
-          currentUserProfile = { ...profileData, isPremium, contacts: contactsSnapshot.val() || {} };
+          currentUserProfile = { ...profileData, contacts: contactsSnapshot.val() || {} };
 
+          // --- RULE 1: Update UI and Modal after saving ---
           updateUI(currentUserProfile);
           populateProfileModal(currentUserProfile);
-          updatePremiumStatus(currentUserProfile);
           
           showProfileModal(false);
 
@@ -1199,19 +1143,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const declineBtn = e.target.closest('.decline-request-btn');
       if(declineBtn) declineFriendRequest(declineBtn.dataset.requesterId);
   });
-  
-  // VIP Modal Listeners
-  premiumBtn.addEventListener('click', () => showVipModal(true));
-  vipModalCloseBtn.addEventListener('click', () => showVipModal(false));
-  vipModalBackdrop.addEventListener('click', () => showVipModal(false));
-  vipModalActionBtn.addEventListener('click', () => {
-      alert('Sistema de pagamentos em integração!');
-  });
 
   window.addEventListener('beforeunload', () => {
+    // This is a synchronous, best-effort cleanup. The primary, more reliable
+    // cleanup is handled by the `onDisconnect()` hooks set up when a user
+    // enters a queue or a room. This does NOT remove user profile data.
     if(currentUser){
-      if (sessionId) db.ref(`queue/${sessionId}`).remove();
-      if (roomRef) roomRef.remove();
+      if (sessionId) {
+          db.ref(`queue/${sessionId}`).remove();
+      }
+      if (roomRef) {
+          roomRef.remove();
+      }
     }
   });
 });
