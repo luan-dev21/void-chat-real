@@ -147,7 +147,7 @@
 
   <!-- Profile Creation Modal -->
   <div id="profile-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-      <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan space-y-6">
+      <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan animate-pulse space-y-6">
           <div class="text-center">
               <h1 class="text-3xl font-bold text-white neon-text-green">COMPLETE SEU PERFIL</h1>
               <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade para mergulhar no Vazio.</p>
@@ -213,7 +213,7 @@
 
             <!-- Card 3: Private Chat -->
             <div id="private-chat-card" class="relative bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
-                <div id="private-chat-notification" class="hidden absolute top-3 right-3 w-4 h-4 bg-red-600 rounded-full border-2 border-black notification-dot"></div>
+                <div id="private-chat-notification" class="hidden absolute top-3 right-3 w-4 h-4 bg-red-500 rounded-full border-2 border-black notification-dot"></div>
                 <i class="fas fa-user-secret text-4xl text-cyan-400 mb-4"></i>
                 <h2 class="text-2xl font-bold text-white">CHAT PRIVADO</h2>
                 <p class="text-gray-400 text-sm mt-2">Inicie conversas diretas com seus contatos.</p>
@@ -233,7 +233,7 @@
                     <button id="notifications-btn" class="text-2xl text-cyan-400 hover:text-white transition-colors">
                         <i class="fas fa-bell"></i>
                     </button>
-                    <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
+                    <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-black notification-dot"></span>
                 </div>
             </div>
             <button class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let privateMessagesListener = null;
   let contactsListener = null;
   let presenceListener = null;
-  let notificationListener = null;
+  let unreadListener = null;
   let friendRequestListener = null;
   let sentRequestListener = null;
   let receivedFriendRequests = {};
@@ -571,16 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const showView = (view) => {
-    // A little more robust way to hide all screens/modals
-    ['login-screen', 'home-screen', 'entry-screen', 'chat-screen', 'global-chat-screen', 
-     'contacts-screen', 'private-chat-screen', 'profile-modal', 'notifications-modal'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) {
-            el.classList.add('hidden');
-            el.style.display = 'none'; // Ensure it's fully hidden
-        }
+    document.querySelectorAll('main, div[id$="-screen"], div[id$="-modal"]').forEach(el => {
+        el.classList.add('hidden');
+        el.style.display = 'none';
     });
-    
     const viewMap = {
       login: loginScreen, home: homeScreen, scanning: entryScreen,
       chat: chatScreen, 'global-chat': globalChatScreen,
@@ -588,8 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     if(viewMap[view]) {
       viewMap[view].classList.remove('hidden');
-      // Use flex for all main views for consistency
-      viewMap[view].style.display = 'flex'; 
+      viewMap[view].style.display = 'flex';
     }
   };
   
@@ -644,10 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const listenForNotifications = (user) => {
-      const notificationsRef = db.ref(`notifications/${user.uid}`);
-      if (notificationListener) notificationsRef.off('value', notificationListener);
-      notificationListener = notificationsRef.on('value', snapshot => {
+  const listenForUnreadMessages = (user) => {
+      const unreadRef = db.ref(`users/${user.uid}/unread_messages`);
+      if (unreadListener) unreadRef.off('value', unreadListener);
+      unreadListener = unreadRef.on('value', snapshot => {
           privateChatNotification.classList.toggle('hidden', !snapshot.exists());
       });
   };
@@ -655,60 +648,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkUserProfile = async (user) => {
     const userRef = db.ref(`users/${user.uid}`);
     const snapshot = await userRef.once('value');
-    const profile = snapshot.val();
+    let profile = snapshot.val() || {};
     
-    // Check if profile exists and is complete
-    const isProfileComplete = profile && profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
+    const contactsSnapshot = await db.ref(`users/${user.uid}/contacts`).once('value');
+    profile.contacts = contactsSnapshot.val() || {};
+    currentUserProfile = profile;
+
+    const isProfileComplete = profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
 
     if (isProfileComplete) {
-      // Fetch contacts separately to ensure profile object is complete
-      const contactsSnapshot = await db.ref(`users/${user.uid}/contacts`).once('value');
-      profile.contacts = contactsSnapshot.val() || {};
-      currentUserProfile = profile;
-      
       populateHomePage(profile);
       managePresence(user);
-      listenForNotifications(user);
+      listenForUnreadMessages(user);
       listenForFriendRequests(user);
       showView('home');
     } else {
-      // Profile is incomplete or doesn't exist, show modal
       showProfileModal(true);
     }
     setLoadingState(false);
   };
   
-  const startApp = () => {
-    setLoadingState(true, 'Verificando sessão...');
-    auth.getRedirectResult().catch(handleAuthError);
+  setLoadingState(true, 'Verificando login...');
+  auth.getRedirectResult().catch(handleAuthError);
 
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            if (currentUser && currentUser.uid === user.uid) return; // Already logged in and processed
-            currentUser = user;
-            checkUserProfile(user);
-        } else {
-            currentUser = null;
-            currentUserProfile = null;
-            db.ref().off(); // Detach all listeners on logout
-            showView('login');
-            setLoadingState(false);
-        }
-    });
-  };
-
-  // ---=== CRITICAL: Set Persistence FIRST ===---
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => {
-        // Firebase will now attempt to persist the user's session.
-        // We can now initialize the rest of the app logic.
-        startApp();
-    })
-    .catch((error) => {
-        console.error("Error setting persistence:", error);
-        // Start the app anyway with default (session) persistence.
-        startApp();
-    });
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      if (currentUser && currentUser.uid === user.uid) return; // Already logged in
+      currentUser = user;
+      checkUserProfile(user);
+    } else {
+      currentUser = null;
+      currentUserProfile = null;
+      db.ref().off(); // Detach all listeners on logout
+      showView('login');
+      setLoadingState(false);
+    }
+  });
 
   // ---=== RANDOM CHAT (MATCHMAKING) LOGIC ===---
   const findPartner = async () => {
@@ -815,6 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (globalMessagesListener) db.ref('global_messages').off('child_added', globalMessagesListener);
     if (globalOnlineListener) db.ref('global_online').off('value', globalOnlineListener);
     db.ref(`global_online/${currentUser.uid}`).remove();
+    db.ref('.info/connected').off();
     showView('home');
   };
   
@@ -895,9 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updates[`/friend_requests/${currentUser.uid}/${requesterId}`] = null;
     updates[`/sent_friend_requests/${requesterId}/${currentUser.uid}`] = null;
     await db.ref().update(updates);
-    if(currentUserProfile.contacts) {
-      currentUserProfile.contacts[requesterId] = true;
-    }
+    currentUserProfile.contacts[requesterId] = true;
   };
   
   const declineFriendRequest = async (requesterId) => {
@@ -911,24 +885,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const enterContactsScreen = () => {
       showView('contacts');
       if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
-      
       contactsListener = db.ref(`users/${currentUser.uid}/contacts`).on('value', (contactSnapshot) => {
           const contactIds = Object.keys(contactSnapshot.val() || {});
-          
           if (presenceListener) db.ref('presence').off('value', presenceListener);
-          const presenceRef = db.ref('presence');
-          presenceListener = presenceRef.on('value', (presenceSnapshot) => {
-              
-              if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
-              const notificationsRef = db.ref(`notifications/${currentUser.uid}`);
-              notificationListener = notificationsRef.on('value', (notificationSnapshot) => {
-                renderContactsList(contactIds, presenceSnapshot.val() || {}, notificationSnapshot.val() || {});
-              });
+          presenceListener = db.ref('presence').on('value', (presenceSnapshot) => {
+              renderContactsList(contactIds, presenceSnapshot.val() || {});
           });
       });
   };
 
-  const renderContactsList = async (contactIds, onlineUids, notifications) => {
+  const renderContactsList = async (contactIds, onlineUids) => {
       contactsList.innerHTML = '';
       if (contactIds.length === 0) {
         contactsList.innerHTML = `<p class="text-gray-500 text-center mt-8">Adicione amigos para começar.</p>`;
@@ -938,24 +904,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const userSnap = await db.ref(`users/${friendId}`).once('value');
           const friendProfile = userSnap.val();
           if (!friendProfile) continue;
-          
           const isOnline = onlineUids[friendId] === true;
-          const hasUnread = notifications[friendId] === true;
-
           const contactEl = document.createElement('div');
           contactEl.className = 'flex items-center justify-between gap-4 p-3 rounded-lg hover:bg-cyan-500/20 cursor-pointer';
-          contactEl.innerHTML = `
-            <div class="flex items-center gap-4">
-                <img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full">
-                <div>
-                    <p class="font-bold text-lg">${friendProfile.username}</p>
-                    <p class="text-xs ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                ${hasUnread ? '<div class="w-3 h-3 bg-red-600 rounded-full notification-dot"></div>' : ''}
-                <i class="fas fa-comment-dots text-cyan-400"></i>
-            </div>`;
+          contactEl.innerHTML = `<div class="flex items-center gap-4"><img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full"><div><p class="font-bold text-lg">${friendProfile.username}</p><p class="text-xs ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div></div><i class="fas fa-comment-dots text-cyan-400"></i>`;
           contactEl.addEventListener('click', () => startPrivateChat(friendId, friendProfile));
           contactsList.appendChild(contactEl);
       }
@@ -964,7 +916,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaveContactsScreen = () => {
     if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
     if (presenceListener) db.ref('presence').off('value', presenceListener);
-    if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
   };
 
   const startPrivateChat = (friendId, friendProfile) => {
@@ -981,8 +932,7 @@ document.addEventListener('DOMContentLoaded', () => {
           privateChatPartnerStatus.className = `text-xs ${snap.exists() ? 'text-green-400 neon-text-green' : 'text-red-500 neon-text-red'}`;
       });
       
-      db.ref(`notifications/${currentUser.uid}/${friendId}`).remove();
-      
+      db.ref(`users/${currentUser.uid}/unread_messages/${privateChatRoomId}`).remove();
       privateChatContainer.innerHTML = '';
       const messagesRef = db.ref(`private_messages/${privateChatRoomId}/messages`).limitToLast(100);
       privateMessagesListener = messagesRef.on('child_added', snap => addMessageToUI(snap.val(), privateChatContainer));
@@ -991,7 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const leavePrivateChat = () => {
       if (privateMessagesListener) db.ref(`private_messages/${privateChatRoomId}/messages`).off('child_added', privateMessagesListener);
-      if (presenceListener && currentPrivateChatFriend) db.ref(`presence/${currentPrivateChatFriend.id}`).off('value', presenceListener);
+      if (presenceListener) db.ref(`presence/${currentPrivateChatFriend.id}`).off('value', presenceListener);
       currentPrivateChatFriend = null; privateChatRoomId = null;
   };
 
@@ -999,17 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (text.trim() === '' || !privateChatRoomId || !currentPrivateChatFriend) return;
       const messageData = { senderId: currentUser.uid, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
       db.ref(`private_messages/${privateChatRoomId}/messages`).push(messageData);
-      db.ref(`notifications/${currentPrivateChatFriend.id}/${currentUser.uid}`).set(true);
-  };
-  
-  const sendMessage = (text) => {
-    if (text.trim() === '' || !chatRoomId || !roomRef || !currentUser) return;
-    const messageData = {
-        senderId: currentUser.uid,
-        text: text,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    };
-    roomRef.child('messages').push(messageData);
+      db.ref(`users/${currentPrivateChatFriend.id}/unread_messages/${privateChatRoomId}`).set(true);
   };
   
   // Generic Message Renderer
@@ -1055,9 +995,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---=== EVENT LISTENERS ===---
   loginForm.addEventListener('submit', (e) => e.preventDefault());
-  loginBtn.addEventListener('click', () => { setLoadingState(true, 'Entrando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
-  signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
-  googleSigninBtn.addEventListener('click', () => { setLoadingState(true, 'Aguardando Google...'); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
+  loginBtn.addEventListener('click', () => { auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  signupBtn.addEventListener('click', () => { auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  googleSigninBtn.addEventListener('click', () => { auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
   
   profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1065,19 +1005,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!Object.values(profileData).every(Boolean)) { fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
     fullProfileErrorEl.textContent = '';
     setLoadingState(true, 'Salvando...');
-    
     db.ref(`users/${currentUser.uid}`).set(profileData)
-      .then(() => {
-          console.log('Dados salvos com sucesso!');
-          showProfileModal(false); // Hide modal only on success
-          checkUserProfile(currentUser); // Re-check to proceed to home
-      })
-      .catch((err) => {
-          console.error("Erro ao salvar perfil:", err);
-          alert("Ocorreu um erro ao salvar seu perfil. Tente novamente. Erro: " + err.message);
-          fullProfileErrorEl.textContent = 'Erro ao salvar.';
-          setLoadingState(false);
-      });
+      .then(() => checkUserProfile(currentUser))
+      .catch((e) => fullProfileErrorEl.textContent = 'Erro ao salvar.')
+      .finally(() => { setLoadingState(false); showProfileModal(false); });
   });
 
   userProfileFooter.addEventListener('click', () => showProfileModal(true));
@@ -1110,17 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('beforeunload', () => {
-    // This is a synchronous, best-effort cleanup. The primary, more reliable
-    // cleanup is handled by the `onDisconnect()` hooks set up when a user
-    // enters a queue or a room. This does NOT remove user profile data.
-    if(currentUser){
-      if (sessionId) {
-          db.ref(`queue/${sessionId}`).remove();
-      }
-      if (roomRef) {
-          roomRef.remove();
-      }
-    }
+      if(currentUser){ db.ref(`presence/${currentUser.uid}`).remove(); db.ref(`global_online/${currentUser.uid}`).remove(); }
   });
 });
 </script>
