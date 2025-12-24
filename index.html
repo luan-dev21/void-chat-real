@@ -668,22 +668,37 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoadingState(false);
   };
   
-  setLoadingState(true, 'Verificando login...');
-  auth.getRedirectResult().catch(handleAuthError);
+  const startApp = () => {
+    setLoadingState(true, 'Verificando login...');
+    auth.getRedirectResult().catch(handleAuthError);
 
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      if (currentUser && currentUser.uid === user.uid) return; // Already logged in
-      currentUser = user;
-      checkUserProfile(user);
-    } else {
-      currentUser = null;
-      currentUserProfile = null;
-      db.ref().off(); // Detach all listeners on logout
-      showView('login');
-      setLoadingState(false);
-    }
-  });
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            if (currentUser && currentUser.uid === user.uid) return; // Already logged in
+            currentUser = user;
+            checkUserProfile(user);
+        } else {
+            currentUser = null;
+            currentUserProfile = null;
+            db.ref().off(); // Detach all listeners on logout
+            showView('login');
+            setLoadingState(false);
+        }
+    });
+  };
+
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        // Firebase will now attempt to persist the user's session.
+        // We can now start the application logic.
+        startApp();
+    })
+    .catch((error) => {
+        // Handle Errors here.
+        console.error("Error setting persistence:", error);
+        // Start the app anyway with default (session) persistence.
+        startApp();
+    });
 
   // ---=== RANDOM CHAT (MATCHMAKING) LOGIC ===---
   const findPartner = async () => {
@@ -1067,7 +1082,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('beforeunload', () => {
-      if(currentUser){ db.ref(`presence/${currentUser.uid}`).remove(); db.ref(`global_online/${currentUser.uid}`).remove(); }
+    // This is a synchronous, best-effort cleanup. The primary, more reliable
+    // cleanup is handled by the `onDisconnect()` hooks set up when a user
+    // enters a queue or a room.
+    if(currentUser){
+      // If user is in the matchmaking queue, remove their entry.
+      if (sessionId) {
+          db.ref(`queue/${sessionId}`).remove();
+      }
+      // If user is in a random chat room, remove the entire room.
+      // The other user's client will detect this and re-queue them.
+      if (roomRef) {
+          roomRef.remove();
+      }
+    }
   });
 });
 </script>
