@@ -116,23 +116,50 @@
     </div>
   </div>
 
-  <!-- Profile Creation Screen -->
-  <div id="profile-screen" class="hidden w-full h-full flex items-center justify-center p-4 relative z-10">
-    <div class="w-full max-w-md bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 neon-border-cyan space-y-6">
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-white neon-text-green">CRIE SEU PERFIL</h1>
-        <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade anônima no Vazio.</p>
+  <!-- Profile Creation Modal -->
+  <div id="profile-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
+      <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan animate-pulse space-y-6">
+          <div class="text-center">
+              <h1 class="text-3xl font-bold text-white neon-text-green">COMPLETE SEU PERFIL</h1>
+              <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade para mergulhar no Vazio.</p>
+          </div>
+          <form id="profile-form" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                      <label for="username-input" class="block text-cyan-400 text-sm mb-1">Username</label>
+                      <input type="text" id="username-input" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                  </div>
+                  <div>
+                      <label for="gender-select" class="block text-cyan-400 text-sm mb-1">Sexo</label>
+                      <select id="gender-select" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
+                          <option value="">Selecione...</option>
+                          <option value="Masculino">Masculino</option>
+                          <option value="Feminino">Feminino</option>
+                          <option value="Outro">Outro</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label for="region-select" class="block text-cyan-400 text-sm mb-1">Região (Estado)</label>
+                      <select id="region-select" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
+                        <!-- Options will be populated by JS -->
+                      </select>
+                  </div>
+                   <div>
+                      <label for="interests-input" class="block text-cyan-400 text-sm mb-1">Interesses</label>
+                      <input type="text" id="interests-input" placeholder="Games, Música, etc" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                  </div>
+              </div>
+               <div>
+                  <label for="avatar-input" class="block text-cyan-400 text-sm mb-1">URL da Foto de Perfil / Avatar</label>
+                  <input type="url" id="avatar-input" placeholder="https://exemplo.com/imagem.png" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+              </div>
+
+              <p id="full-profile-error" class="text-red-500 text-xs text-center h-4"></p>
+              <button type="submit" id="save-full-profile-btn" class="w-full font-bold py-3 px-4 rounded-md text-black bg-cyan-400 neon-button-glow transition-all text-lg">SALVAR NO VAZIO</button>
+          </form>
       </div>
-      <div class="space-y-4">
-        <div>
-          <label for="nickname-input" class="block text-cyan-400 text-sm mb-1">Seu Apelido no Vazio</label>
-          <input type="text" id="nickname-input" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
-        </div>
-        <p id="profile-error" class="text-red-500 text-xs text-center h-4"></p>
-        <button id="save-profile-btn" class="w-full font-bold py-2 px-4 rounded-md text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">Salvar Perfil</button>
-      </div>
-    </div>
   </div>
+
 
   <!-- Entry/Scanning Screen -->
   <div id="entry-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 text-center relative z-10">
@@ -181,8 +208,8 @@
     <!-- Center Chat -->
     <section class="w-1/2 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
         <header class="p-3 border-b border-gray-700/50 text-center">
-          <h3 class="font-bold text-lg text-white">CONEXÃO ESTABELECIDA</h3>
-          <p class="text-xs text-gray-400">Você está conversando com um estranho.</p>
+          <h3 id="partner-name" class="font-bold text-lg text-white">CONEXÃO ESTABELECIDA</h3>
+          <p id="partner-info" class="text-xs text-gray-400">Você está conversando com um estranho.</p>
         </header>
         <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
           <!-- Messages will be injected here -->
@@ -261,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingOverlay = document.getElementById('loading-overlay');
   const loadingMsg = document.getElementById('loading-msg');
   const loginScreen = document.getElementById('login-screen');
-  const profileScreen = document.getElementById('profile-screen');
+  const profileModal = document.getElementById('profile-modal');
   const entryScreen = document.getElementById('entry-screen');
   const chatScreen = document.getElementById('chat-screen');
   
@@ -274,9 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const authErrorEl = document.getElementById('auth-error');
   const logoutBtn = document.getElementById('logout-btn');
 
-  const nicknameInput = document.getElementById('nickname-input');
-  const saveProfileBtn = document.getElementById('save-profile-btn');
-  const profileErrorEl = document.getElementById('profile-error');
+  const profileForm = document.getElementById('profile-form');
+  const usernameInput = document.getElementById('username-input');
+  const genderSelect = document.getElementById('gender-select');
+  const regionSelect = document.getElementById('region-select');
+  const interestsInput = document.getElementById('interests-input');
+  const avatarInput = document.getElementById('avatar-input');
+  const saveFullProfileBtn = document.getElementById('save-full-profile-btn');
+  const fullProfileErrorEl = document.getElementById('full-profile-error');
+
 
   const enterVoidBtn = document.getElementById('enter-void-btn');
   const entryContent = document.getElementById('entry-content');
@@ -284,6 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const messageForm = document.getElementById('message-form');
   const messageInput = document.getElementById('message-input');
   const chatContainer = document.getElementById('chat-container');
+  const partnerNameEl = document.getElementById('partner-name');
+  const partnerInfoEl = document.getElementById('partner-info');
   const nextBtn = document.getElementById('next-btn');
   const onlineUsersEl = document.getElementById('online-users');
 
@@ -295,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let roomRef = null;
   let messagesListener = null;
   let roomValueListener = null;
-  let chatNicknames = {};
+  let chatParticipantData = {};
 
   // ---=== UI HELPER FUNCTIONS ===---
   const setLoadingState = (isLoading, message = '') => {
@@ -311,22 +346,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showView = (view) => {
     loginScreen.classList.add('hidden');
-    profileScreen.classList.add('hidden');
     entryScreen.classList.add('hidden');
     chatScreen.classList.add('hidden');
+    profileModal.classList.add('hidden');
     
     loginScreen.style.display = 'none';
-    profileScreen.style.display = 'none';
     entryScreen.style.display = 'none';
     chatScreen.style.display = 'none';
+    profileModal.style.display = 'none';
 
     if(view === 'login') {
       loginScreen.classList.remove('hidden');
       loginScreen.style.display = 'flex';
-    }
-    if(view === 'profile') {
-      profileScreen.classList.remove('hidden');
-      profileScreen.style.display = 'flex';
     }
     if(view === 'entry') {
         entryScreen.classList.remove('hidden');
@@ -347,17 +378,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   
+  const showProfileModal = (show) => {
+    if(show){
+      profileModal.classList.remove('hidden');
+      profileModal.style.display = 'flex';
+    } else {
+      profileModal.classList.add('hidden');
+      profileModal.style.display = 'none';
+    }
+  };
+  
+  const populateRegions = () => {
+    const states = ["Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão", "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia", "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"];
+    regionSelect.innerHTML = '<option value="">Selecione seu estado...</option>';
+    states.forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      regionSelect.appendChild(option);
+    });
+  };
+  populateRegions();
+  
   const addMessageToUI = (message) => {
     if (!message || !message.senderId || !currentUser) return;
     const isMe = message.senderId === currentUser.uid;
-    const senderNickname = chatNicknames[message.senderId] || 'Estranho';
+    const senderUsername = chatParticipantData[message.senderId]?.username || 'Estranho';
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `flex flex-col fade-in ${isMe ? 'items-end' : 'items-start'}`;
     
     messageDiv.innerHTML = `
       <div class="max-w-md">
-        <p class="text-xs mb-1 ${isMe ? 'text-right' : 'text-left'} text-cyan-400">${senderNickname}</p>
+        <p class="text-xs mb-1 ${isMe ? 'text-right' : 'text-left'} text-cyan-400">${senderUsername}</p>
         <div class="px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}">
           <p class="text-sm break-words">${message.text}</p>
         </div>
@@ -384,8 +437,10 @@ document.addEventListener('DOMContentLoaded', () => {
     roomRef = null;
     messagesListener = null;
     roomValueListener = null;
-    chatNicknames = {};
+    chatParticipantData = {};
     chatContainer.innerHTML = '';
+    partnerNameEl.textContent = 'CONEXÃO ESTABELECIDA';
+    partnerInfoEl.textContent = 'Você está conversando com um estranho.';
   };
   
   // ---=== AUTHENTICATION LOGIC ===---
@@ -407,12 +462,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkUserProfile = async (user) => {
     const userRef = db.ref(`users/${user.uid}`);
     const snapshot = await userRef.once('value');
-    if (snapshot.exists() && snapshot.val().nickname) {
-      console.log("User profile exists, proceeding to entry screen.");
+    const profile = snapshot.val();
+    const isProfileComplete = profile && profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
+
+    if (isProfileComplete) {
+      console.log("User profile is complete, proceeding to entry screen.");
       showView('entry');
     } else {
-      console.log("User profile does not exist, showing profile creation screen.");
-      showView('profile');
+      console.log("User profile is incomplete, showing profile modal.");
+      showProfileModal(true);
     }
     setLoadingState(false);
   };
@@ -435,7 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---=== CORE LOGIC: MATCHMAKING & CHAT ===---
   const findPartner = async () => {
-    // ... (rest of the findPartner logic remains unchanged)
     if (!currentUser) return;
     console.log("Looking for a partner...");
     showView('scanning');
@@ -506,19 +563,21 @@ document.addEventListener('DOMContentLoaded', () => {
     partnerId = pId;
     console.log(`Starting chat with ${partnerId} in room ${chatRoomId}`);
 
-    // Fetch nicknames before starting chat
     try {
-        const myNickPromise = db.ref(`users/${currentUser.uid}/nickname`).once('value');
-        const partnerNickPromise = db.ref(`users/${partnerId}/nickname`).once('value');
-        const [myNickSnapshot, partnerNickSnapshot] = await Promise.all([myNickPromise, partnerNickPromise]);
+        const myProfilePromise = db.ref(`users/${currentUser.uid}`).once('value');
+        const partnerProfilePromise = db.ref(`users/${partnerId}`).once('value');
+        const [myProfileSnapshot, partnerProfileSnapshot] = await Promise.all([myProfilePromise, partnerProfilePromise]);
         
-        chatNicknames[currentUser.uid] = myNickSnapshot.val() || 'Você';
-        chatNicknames[partnerId] = partnerNickSnapshot.val() || 'Estranho';
+        chatParticipantData[currentUser.uid] = myProfileSnapshot.val() || { username: 'Você' };
+        chatParticipantData[partnerId] = partnerProfileSnapshot.val() || { username: 'Estranho', region: 'Desconhecida' };
     } catch (error) {
-        console.error("Failed to fetch nicknames:", error);
-        chatNicknames[currentUser.uid] = 'Você';
-        chatNicknames[partnerId] = 'Estranho';
+        console.error("Failed to fetch profiles:", error);
+        chatParticipantData[currentUser.uid] = { username: 'Você' };
+        chatParticipantData[partnerId] = { username: 'Estranho', region: 'Desconhecida' };
     }
+
+    partnerNameEl.textContent = chatParticipantData[partnerId].username;
+    partnerInfoEl.textContent = `Conectado de ${chatParticipantData[partnerId].region}`;
 
     roomRef = db.ref(`rooms/${chatRoomId}`);
     roomRef.onDisconnect().remove();
@@ -566,22 +625,39 @@ document.addEventListener('DOMContentLoaded', () => {
       auth.signInWithRedirect(provider).catch(handleAuthError);
   });
   
-  saveProfileBtn.addEventListener('click', () => {
-    const nickname = nicknameInput.value.trim();
-    if (nickname.length < 3) {
-      profileErrorEl.textContent = 'O apelido deve ter pelo menos 3 caracteres.';
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const profileData = {
+      username: usernameInput.value.trim(),
+      gender: genderSelect.value,
+      region: regionSelect.value,
+      interests: interestsInput.value.trim(),
+      avatar: avatarInput.value.trim()
+    };
+
+    if (profileData.username.length < 3) {
+      fullProfileErrorEl.textContent = 'Username deve ter pelo menos 3 caracteres.';
       return;
     }
-    profileErrorEl.textContent = '';
+    if (!profileData.gender || !profileData.region) {
+      fullProfileErrorEl.textContent = 'Por favor, selecione sexo e região.';
+      return;
+    }
+     if (!profileData.avatar) {
+      fullProfileErrorEl.textContent = 'Por favor, insira uma URL de avatar.';
+      return;
+    }
+    fullProfileErrorEl.textContent = '';
     setLoadingState(true, 'Salvando perfil...');
-    db.ref(`users/${currentUser.uid}`).set({ nickname: nickname })
+    db.ref(`users/${currentUser.uid}`).set(profileData)
       .then(() => {
         console.log('Profile saved successfully.');
+        showProfileModal(false);
         showView('entry');
       })
       .catch((error) => {
         console.error("Error saving profile:", error);
-        profileErrorEl.textContent = 'Erro ao salvar o perfil. Tente novamente.';
+        fullProfileErrorEl.textContent = 'Erro ao salvar o perfil. Tente novamente.';
       })
       .finally(() => {
         setLoadingState(false);
