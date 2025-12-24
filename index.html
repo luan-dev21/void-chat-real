@@ -644,13 +644,27 @@ document.addEventListener('DOMContentLoaded', () => {
     messagesListener = roomRef.child('messages').on('child_added', (snapshot) => addMessageToUI(snapshot.val()));
     
     roomValueListener = roomRef.on('value', (snapshot) => {
-      if (!snapshot.exists() || !snapshot.val().members || !snapshot.val().members[partnerId]) {
-        alert('O estranho se desconectou.');
-        resetState();
-        showView('home');
+      const data = snapshot.val();
+      // This listener should only act if we are actively in a chat.
+      if (!chatRoomId) {
+        return;
+      }
+
+      // Partner has left if the room is gone, or they are no longer in the members list.
+      if (!data || !data.members || !data.members[partnerId]) {
+        // Detach listener immediately to prevent multiple triggers.
+        roomRef.off('value', roomValueListener);
+        
+        setLoadingState(true, 'O estranho saiu do Vazio...');
+        
+        setTimeout(() => {
+          setLoadingState(false); // Hide the message before starting the new search.
+          resetState(); // Cleans up the rest of state.
+          findPartner(); // Find a new partner.
+        }, 2000);
       } else {
-         const members = snapshot.val().members;
-         if(members) onlineUsersEl.textContent = Object.keys(members).length;
+         const members = data.members;
+         onlineUsersEl.textContent = Object.keys(members).length;
       }
     });
   };
@@ -733,13 +747,16 @@ document.addEventListener('DOMContentLoaded', () => {
     showProfileModal(true);
   });
 
-  logoutBtn.addEventListener('click', () => auth.signOut());
+  logoutBtn.addEventListener('click', () => {
+    resetState();
+    showView('home');
+  });
   
   matchBtn.addEventListener('click', findPartner);
   
   nextBtn.addEventListener('click', () => {
     resetState();
-    showView('home');
+    findPartner();
   });
   
   messageForm.addEventListener('submit', (e) => {
