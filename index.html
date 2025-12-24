@@ -532,7 +532,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---=== STATE VARIABLES ===---
   let currentUser = null;
   let currentUserProfile = null;
-  let userProfileListener = null; // Listener for real-time profile updates.
   // Matchmaking State
   let sessionId = null;
   let chatRoomId = null;
@@ -611,7 +610,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   populateRegions();
   
-  const populateHomePage = (profile) => {
+  // --- RULE 2: Function dedicated to updating the UI ---
+  const updateUI = (profile) => {
       if (!profile) return;
       userAvatarHome.src = profile.avatar || 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
       userNameHome.textContent = profile.username;
@@ -658,50 +658,43 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.getRedirectResult().catch(handleAuthError);
 
     auth.onAuthStateChanged((user) => {
-      // Detach the listener from the PREVIOUS user before handling the new one.
-      if (currentUser && userProfileListener) {
-        db.ref(`users/${currentUser.uid}`).off('value', userProfileListener);
+      // Clean up listeners for previous user to prevent memory leaks on logout
+      if (currentUser) {
+        db.ref().off();
       }
       
       if (user) {
         currentUser = user;
         const userRef = db.ref(`users/${user.uid}`);
         
-        // Listen for real-time profile updates.
-        userProfileListener = userRef.on('value', async (snapshot) => {
+        // --- RULE 1: Use .once() for a single, stable profile fetch on load ---
+        userRef.once('value').then(async (snapshot) => {
           const profile = snapshot.val();
           const isProfileComplete = profile && profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
 
           if (isProfileComplete) {
-            const isInitialLoad = !currentUserProfile; // Check if this is the first load vs. a real-time update.
-            
             // Update the global profile state
             const contactsSnapshot = await db.ref(`users/${user.uid}/contacts`).once('value');
             profile.contacts = contactsSnapshot.val() || {};
             currentUserProfile = profile;
             
-            // --- RULE 1 & 3: Immediately update footer with latest data ---
-            populateHomePage(currentUserProfile);
-            
-            // --- RULE 2: If profile exists, go to home and hide modal ---
+            // --- RULE 2 & 3: Update UI, show home, and stop loading ---
+            updateUI(currentUserProfile);
             showProfileModal(false);
+            showView('home');
 
-            // Run one-time initializations only on the first load for this session.
-            if (isInitialLoad) {
-              managePresence(user);
-              listenForNotifications(user);
-              listenForFriendRequests(user);
-              showView('home');
-            }
-
+            // Initialize persistent real-time services
+            managePresence(user);
+            listenForNotifications(user);
+            listenForFriendRequests(user);
           } else {
-            // Profile is incomplete or doesn't exist, show the modal.
-            currentUserProfile = null; // Clear stale profile data
+            // Profile is incomplete or doesn't exist, show the creation modal.
+            currentUserProfile = null;
             showProfileModal(true);
           }
           setLoadingState(false);
-        }, (error) => {
-          console.error("Error listening to user profile:", error);
+        }).catch((error) => {
+          console.error("Error fetching user profile:", error);
           setLoadingState(false);
           showView('login');
         });
@@ -710,8 +703,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // User is signed out
         currentUser = null;
         currentUserProfile = null;
-        userProfileListener = null;
-        db.ref().off(); // Detach all listeners on logout
         showView('login');
         setLoadingState(false);
       }
@@ -1085,20 +1076,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim() };
     if (!Object.values(profileData).every(Boolean)) { fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
     fullProfileErrorEl.textContent = '';
-    setLoadingState(true, 'Salvando...');
+    
+    // --- RULE 4: Manage save button state during save operation ---
+    saveFullProfileBtn.disabled = true;
+    saveFullProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>SALVANDO...';
     
     db.ref(`users/${currentUser.uid}`).update(profileData)
-      .then(() => {
+      .then(async () => {
           console.log('Dados salvos com sucesso!');
-          // The .on('value') listener will automatically handle the UI update.
-          // We just need to hide the modal. The view will switch to 'home' automatically.
+          const wasFirstTimeSetup = !currentUserProfile;
+          
+          // Manually update global state and UI after saving
+          const contactsSnapshot = await db.ref(`users/${currentUser.uid}/contacts`).once('value');
+          currentUserProfile = { ...profileData, contacts: contactsSnapshot.val() || {} };
+          updateUI(currentUserProfile);
+          
           showProfileModal(false);
+
+          if (wasFirstTimeSetup) {
+            // If it was the first profile setup, show home and start services
+            showView('home');
+            managePresence(currentUser);
+            listenForNotifications(currentUser);
+            listenForFriendRequests(currentUser);
+          }
       })
       .catch((err) => {
           console.error("Erro ao salvar perfil:", err);
           alert("Ocorreu um erro ao salvar seu perfil. Tente novamente. Erro: " + err.message);
           fullProfileErrorEl.textContent = 'Erro ao salvar.';
-          setLoadingState(false);
+      })
+      .finally(() => {
+          // Always reset button to its initial state
+          saveFullProfileBtn.disabled = false;
+          saveFullProfileBtn.innerHTML = 'SALVAR NO VAZIO';
       });
   });
 
