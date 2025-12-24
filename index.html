@@ -48,6 +48,13 @@
     .pulse-dot {
       animation: pulse-green 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
     }
+    @keyframes pulse-premium {
+        0%, 100% { box-shadow: 0 0 5px #a855f7, 0 0 10px #a855f7; }
+        50% { box-shadow: 0 0 15px #a855f7, 0 0 25px #a855f7; }
+    }
+    .neon-premium-glow {
+        animation: pulse-premium 2.5s infinite;
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -160,21 +167,56 @@
       </div>
   </div>
 
+  <!-- Home Screen -->
+    <div id="home-screen" class="hidden w-full h-full flex flex-col justify-center items-center p-4 relative z-10">
+        <div class="text-center mb-12">
+            <h1 class="text-6xl md:text-8xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
+            <p class="text-cyan-400 mt-4 neon-text-cyan">ESCOLHA SEU CAMINHO NO VAZIO.</p>
+        </div>
 
-  <!-- Entry/Scanning Screen -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
+            <!-- Card 1: Global Chat -->
+            <div class="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-not-allowed opacity-50">
+                <i class="fas fa-globe text-4xl text-cyan-400 mb-4"></i>
+                <h2 class="text-2xl font-bold text-white">CHAT GLOBAL</h2>
+                <p class="text-gray-400 text-sm mt-2">Converse com todos os usuários online em uma única sala. (Em breve)</p>
+            </div>
+
+            <!-- Card 2: Random Void (Matchmaking) -->
+            <div id="random-void-card" class="bg-white/5 backdrop-blur-md border-2 border-cyan-400 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-800/60 transition-all cursor-pointer transform hover:scale-105">
+                <i class="fas fa-random text-4xl text-cyan-300 mb-4"></i>
+                <h2 class="text-2xl font-bold text-white">RANDOM VOID</h2>
+                <p class="text-gray-300 text-sm mt-2">Mergulhe no desconhecido e encontre uma conexão anônima aleatória.</p>
+            </div>
+
+            <!-- Card 3: Private Chat -->
+            <div class="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-not-allowed opacity-50">
+                <i class="fas fa-user-secret text-4xl text-cyan-400 mb-4"></i>
+                <h2 class="text-2xl font-bold text-white">CHAT PRIVADO</h2>
+                <p class="text-gray-400 text-sm mt-2">Inicie conversas diretas com seus contatos. (Em breve)</p>
+            </div>
+        </div>
+
+        <footer class="absolute bottom-0 left-0 right-0 p-4 bg-black/50 border-t border-cyan-500/20 flex justify-between items-center">
+            <div id="user-profile-footer" class="flex items-center gap-3 cursor-pointer group">
+                <img id="user-avatar-home" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-cyan-400 group-hover:border-white transition-all">
+                <div>
+                    <p id="user-name-home" class="font-bold text-white group-hover:text-cyan-300 transition-all">Carregando...</p>
+                    <p id="user-region-home" class="text-xs text-gray-400">...</p>
+                </div>
+            </div>
+            <button class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
+                <i class="fas fa-star mr-2"></i>ATIVAR PREMIUM
+            </button>
+        </footer>
+    </div>
+
+
+  <!-- Scanning Screen (Simplified) -->
   <div id="entry-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 text-center relative z-10">
-    <div class="relative z-10">
-      <h1 class="text-6xl md:text-8xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
-      <p class="text-cyan-400 mt-4 neon-text-cyan">ONDE AS CONEXÕES SÃO REAIS E ANÔNIMAS.</p>
-      <div id="entry-content" class="mt-12">
-        <button id="enter-void-btn" class="px-10 py-4 text-xl font-bold text-cyan-400 bg-black border-2 border-cyan-400 rounded-md neon-button-glow hover:text-black hover:bg-cyan-400 transition-all duration-300">
-          ENTRAR NO VAZIO
-        </button>
-      </div>
-      <div id="scanning-content" class="hidden mt-12 flex-col items-center justify-center space-y-4">
-        <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
-        <p class="text-xl text-cyan-400 tracking-wider">BUSCANDO CONEXÃO REAL...</p>
-      </div>
+    <div id="scanning-content" class="flex-col items-center justify-center space-y-4">
+      <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
+      <p class="text-xl text-cyan-400 tracking-wider">BUSCANDO CONEXÃO REAL...</p>
     </div>
   </div>
 
@@ -186,7 +228,7 @@
       <div class="flex-grow flex flex-col justify-center items-center text-center">
         <div class="relative flex items-center justify-center w-24 h-24 mb-4">
           <div class="absolute inset-0 bg-green-500/50 rounded-full animate-ping"></div>
-          <i class="fas fa-user-circle text-6xl text-white"></i>
+          <img id="my-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" class="w-20 h-20 rounded-full border-2 border-cyan-300 z-10">
         </div>
         <p class="text-2xl font-bold text-green-400 neon-text-green">ONLINE</p>
         <p class="text-sm text-gray-400">Você está conectado ao Vazio.</p>
@@ -207,9 +249,12 @@
 
     <!-- Center Chat -->
     <section class="w-1/2 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
-        <header class="p-3 border-b border-gray-700/50 text-center">
-          <h3 id="partner-name" class="font-bold text-lg text-white">CONEXÃO ESTABELECIDA</h3>
-          <p id="partner-info" class="text-xs text-gray-400">Você está conversando com um estranho.</p>
+        <header class="p-3 border-b border-gray-700/50 text-center flex items-center gap-4 justify-center">
+          <img id="partner-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500">
+          <div>
+            <h3 id="partner-name" class="font-bold text-lg text-white">CONEXÃO ESTABELECIDA</h3>
+            <p id="partner-info" class="text-xs text-gray-400">Você está conversando com um estranho.</p>
+          </div>
         </header>
         <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
           <!-- Messages will be injected here -->
@@ -289,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingMsg = document.getElementById('loading-msg');
   const loginScreen = document.getElementById('login-screen');
   const profileModal = document.getElementById('profile-modal');
+  const homeScreen = document.getElementById('home-screen');
   const entryScreen = document.getElementById('entry-screen');
   const chatScreen = document.getElementById('chat-screen');
   
@@ -310,20 +356,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveFullProfileBtn = document.getElementById('save-full-profile-btn');
   const fullProfileErrorEl = document.getElementById('full-profile-error');
 
+  const userProfileFooter = document.getElementById('user-profile-footer');
+  const userAvatarHome = document.getElementById('user-avatar-home');
+  const userNameHome = document.getElementById('user-name-home');
+  const userRegionHome = document.getElementById('user-region-home');
 
-  const enterVoidBtn = document.getElementById('enter-void-btn');
-  const entryContent = document.getElementById('entry-content');
-  const scanningContent = document.getElementById('scanning-content');
+  const randomVoidCard = document.getElementById('random-void-card');
   const messageForm = document.getElementById('message-form');
   const messageInput = document.getElementById('message-input');
   const chatContainer = document.getElementById('chat-container');
   const partnerNameEl = document.getElementById('partner-name');
   const partnerInfoEl = document.getElementById('partner-info');
+  const myAvatarChatEl = document.getElementById('my-avatar-chat');
+  const partnerAvatarChatEl = document.getElementById('partner-avatar-chat');
   const nextBtn = document.getElementById('next-btn');
   const onlineUsersEl = document.getElementById('online-users');
 
   // ---=== STATE VARIABLES ===---
   let currentUser = null;
+  let currentUserProfile = null;
   let sessionId = null;
   let chatRoomId = null;
   let partnerId = null;
@@ -346,31 +397,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showView = (view) => {
     loginScreen.classList.add('hidden');
+    homeScreen.classList.add('hidden');
     entryScreen.classList.add('hidden');
     chatScreen.classList.add('hidden');
-    profileModal.classList.add('hidden');
     
     loginScreen.style.display = 'none';
+    homeScreen.style.display = 'none';
     entryScreen.style.display = 'none';
     chatScreen.style.display = 'none';
-    profileModal.style.display = 'none';
 
     if(view === 'login') {
       loginScreen.classList.remove('hidden');
       loginScreen.style.display = 'flex';
     }
-    if(view === 'entry') {
-        entryScreen.classList.remove('hidden');
-        entryScreen.style.display = 'flex';
-        entryContent.classList.remove('hidden');
-        scanningContent.classList.add('hidden');
+    if(view === 'home') {
+      homeScreen.classList.remove('hidden');
+      homeScreen.style.display = 'flex';
     }
     if(view === 'scanning') {
         entryScreen.classList.remove('hidden');
         entryScreen.style.display = 'flex';
-        entryContent.classList.add('hidden');
-        scanningContent.classList.remove('hidden');
-        scanningContent.style.display = 'flex';
     }
     if(view === 'chat') {
       chatScreen.classList.remove('hidden');
@@ -399,6 +445,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
   populateRegions();
+  
+    const populateHomePage = (profile) => {
+      if (!profile) return;
+      userAvatarHome.src = profile.avatar || 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
+      userNameHome.textContent = profile.username;
+      userRegionHome.textContent = profile.region;
+  };
   
   const addMessageToUI = (message) => {
     if (!message || !message.senderId || !currentUser) return;
@@ -463,11 +516,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const userRef = db.ref(`users/${user.uid}`);
     const snapshot = await userRef.once('value');
     const profile = snapshot.val();
+    currentUserProfile = profile; // Cache profile
     const isProfileComplete = profile && profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
 
     if (isProfileComplete) {
-      console.log("User profile is complete, proceeding to entry screen.");
-      showView('entry');
+      console.log("User profile is complete, proceeding to home screen.");
+      populateHomePage(profile);
+      showView('home');
     } else {
       console.log("User profile is incomplete, showing profile modal.");
       showProfileModal(true);
@@ -485,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
       checkUserProfile(user);
     } else {
       currentUser = null;
+      currentUserProfile = null;
       resetState();
       showView('login');
       setLoadingState(false);
@@ -531,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(err => {
             console.error("Failed to create room:", err);
             resetState();
-            showView('entry');
+            showView('home');
         });
     };
 
@@ -553,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Não foi possível encontrar um parceiro. Tente novamente.");
             db.ref(`queue/${sessionId}`).remove();
             sessionId = null;
-            showView('entry');
+            showView('home');
         }
     }, 30000);
   };
@@ -564,18 +620,19 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Starting chat with ${partnerId} in room ${chatRoomId}`);
 
     try {
-        const myProfilePromise = db.ref(`users/${currentUser.uid}`).once('value');
         const partnerProfilePromise = db.ref(`users/${partnerId}`).once('value');
-        const [myProfileSnapshot, partnerProfileSnapshot] = await Promise.all([myProfilePromise, partnerProfilePromise]);
+        const partnerProfileSnapshot = await partnerProfilePromise;
         
-        chatParticipantData[currentUser.uid] = myProfileSnapshot.val() || { username: 'Você' };
-        chatParticipantData[partnerId] = partnerProfileSnapshot.val() || { username: 'Estranho', region: 'Desconhecida' };
+        chatParticipantData[currentUser.uid] = currentUserProfile;
+        chatParticipantData[partnerId] = partnerProfileSnapshot.val() || { username: 'Estranho', region: 'Desconhecida', avatar: '' };
     } catch (error) {
         console.error("Failed to fetch profiles:", error);
-        chatParticipantData[currentUser.uid] = { username: 'Você' };
-        chatParticipantData[partnerId] = { username: 'Estranho', region: 'Desconhecida' };
+        chatParticipantData[currentUser.uid] = currentUserProfile;
+        chatParticipantData[partnerId] = { username: 'Estranho', region: 'Desconhecida', avatar: '' };
     }
-
+    
+    myAvatarChatEl.src = chatParticipantData[currentUser.uid].avatar;
+    partnerAvatarChatEl.src = chatParticipantData[partnerId].avatar;
     partnerNameEl.textContent = chatParticipantData[partnerId].username;
     partnerInfoEl.textContent = `Conectado de ${chatParticipantData[partnerId].region}`;
 
@@ -590,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!snapshot.exists() || !snapshot.val().members || !snapshot.val().members[partnerId]) {
         alert('O estranho se desconectou.');
         resetState();
-        showView('entry');
+        showView('home');
       } else {
          const members = snapshot.val().members;
          if(members) onlineUsersEl.textContent = Object.keys(members).length;
@@ -652,8 +709,10 @@ document.addEventListener('DOMContentLoaded', () => {
     db.ref(`users/${currentUser.uid}`).set(profileData)
       .then(() => {
         console.log('Profile saved successfully.');
+        currentUserProfile = profileData; // Update cached profile
+        populateHomePage(profileData);
         showProfileModal(false);
-        showView('entry');
+        showView('home');
       })
       .catch((error) => {
         console.error("Error saving profile:", error);
@@ -664,12 +723,23 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
+  userProfileFooter.addEventListener('click', () => {
+    if(!currentUserProfile) return;
+    usernameInput.value = currentUserProfile.username;
+    genderSelect.value = currentUserProfile.gender;
+    regionSelect.value = currentUserProfile.region;
+    interestsInput.value = currentUserProfile.interests;
+    avatarInput.value = currentUserProfile.avatar;
+    showProfileModal(true);
+  });
+
   logoutBtn.addEventListener('click', () => auth.signOut());
-  enterVoidBtn.addEventListener('click', findPartner);
+  
+  randomVoidCard.addEventListener('click', findPartner);
   
   nextBtn.addEventListener('click', () => {
     resetState();
-    findPartner();
+    showView('home');
   });
   
   messageForm.addEventListener('submit', (e) => {
