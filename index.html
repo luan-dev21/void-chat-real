@@ -12,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
   
   <!-- Font Awesome CDN for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -29,11 +30,17 @@
     .neon-border-cyan {
       box-shadow: 0 0 3px rgba(0, 255, 255, 0.8), 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.4);
     }
+    .neon-border-green {
+      box-shadow: 0 0 3px rgba(57, 255, 20, 0.8), 0 0 5px rgba(57, 255, 20, 0.6), 0 0 10px rgba(57, 255, 20, 0.4);
+    }
     .neon-text-cyan {
       text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
     }
     .neon-text-green {
        text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+    }
+    .neon-text-red {
+       text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
     }
     .neon-button-glow {
       transition: all 0.2s ease-in-out;
@@ -45,8 +52,16 @@
       0%, 100% { box-shadow: 0 0 2px #39FF14, 0 0 4px #39FF14; }
       50% { box-shadow: 0 0 6px #39FF14, 0 0 12px #39FF14; }
     }
+     @keyframes pulse-red {
+      0%, 100% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; }
+      50% { text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000; }
+    }
     .pulse-dot {
       animation: pulse-green 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+     .recording-active {
+        animation: pulse-red 1.5s infinite;
+        color: #ff0000;
     }
     @keyframes pulse-premium {
         0%, 100% { box-shadow: 0 0 5px #a855f7, 0 0 10px #a855f7; }
@@ -176,10 +191,10 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
             <!-- Card 1: Global Chat -->
-            <div class="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-not-allowed opacity-50">
+            <div id="global-chat-card" class="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
                 <i class="fas fa-globe text-4xl text-cyan-400 mb-4"></i>
                 <h2 class="text-2xl font-bold text-white">CHAT GLOBAL</h2>
-                <p class="text-gray-400 text-sm mt-2">Converse com todos os usuários online em uma única sala. (Em breve)</p>
+                <p class="text-gray-400 text-sm mt-2">Converse com todos os usuários online em uma única sala.</p>
             </div>
 
             <!-- Card 2: Random Void (Matchmaking) -->
@@ -241,8 +256,8 @@
               HUMANOS CONECTADOS
             </p>
           </div>
-          <button id="logout-btn" class="w-full p-2 bg-red-800/50 hover:bg-red-700/50 border border-red-500/50 rounded-md transition-colors text-sm">
-            <i class="fas fa-sign-out-alt mr-2"></i>Sair
+          <button id="exit-to-home-btn" class="w-full p-2 bg-red-800/50 hover:bg-red-700/50 border border-red-500/50 rounded-md transition-colors text-sm">
+            <i class="fas fa-home mr-2"></i>Sair para Home
           </button>
       </div>
     </aside>
@@ -288,6 +303,44 @@
     </aside>
   </main>
 
+    <!-- Global Chat Screen -->
+    <main id="global-chat-screen" class="hidden w-full h-screen p-4 flex gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+        <!-- Left Sidebar - Online Users -->
+        <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+            <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
+                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center">ONLINE</h2>
+                 <button id="global-chat-back-btn" class="text-cyan-400 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left fa-lg"></i>
+                </button>
+            </div>
+            <div id="global-online-users-list" class="flex-grow overflow-y-auto space-y-3 no-scrollbar">
+                <!-- User list will be populated here -->
+            </div>
+        </aside>
+
+        <!-- Center Chat -->
+        <section class="w-3/4 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
+            <header class="p-3 border-b border-gray-700/50 text-center">
+                <h3 class="font-bold text-lg text-white neon-text-cyan">CHAT GLOBAL</h3>
+                <p class="text-xs text-gray-400">Todos os humanos conectados no Vazio.</p>
+            </header>
+            <div id="global-chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
+                <!-- Global messages will be injected here -->
+            </div>
+            <footer class="p-3 border-t border-gray-700/50 bg-black/50">
+                <form id="global-message-form" class="flex items-center gap-3">
+                    <input type="text" id="global-message-input" placeholder="Converse com o mundo..." autocomplete="off" class="flex-1 bg-black/50 border border-cyan-500/50 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white transition-all">
+                    <button type="button" id="record-audio-btn" class="text-cyan-400 hover:text-white text-xl px-3 transition-colors">
+                      <i class="fas fa-microphone"></i>
+                    </button>
+                    <button type="submit" id="global-send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-4 rounded-md transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </footer>
+        </section>
+    </main>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -318,11 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ---=== INITIALIZATION ===---
-  let db, auth;
+  let db, auth, storage;
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     auth = firebase.auth();
+    storage = firebase.storage();
   } catch (e) {
     console.error("Firebase initialization failed.", e);
     document.body.innerHTML = `<div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center"><h1 class="text-2xl font-bold">ERRO CRÍTICO: Falha na inicialização do Firebase. Verifique a configuração.</h1></div>`;
@@ -337,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const homeScreen = document.getElementById('home-screen');
   const entryScreen = document.getElementById('entry-screen');
   const chatScreen = document.getElementById('chat-screen');
+  const globalChatScreen = document.getElementById('global-chat-screen');
   
   const loginForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
@@ -345,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupBtn = document.getElementById('signup-btn');
   const googleSigninBtn = document.getElementById('google-signin-btn');
   const authErrorEl = document.getElementById('auth-error');
-  const logoutBtn = document.getElementById('logout-btn');
+  const exitToHomeBtn = document.getElementById('exit-to-home-btn');
 
   const profileForm = document.getElementById('profile-form');
   const usernameInput = document.getElementById('username-input');
@@ -372,6 +427,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextBtn = document.getElementById('next-btn');
   const onlineUsersEl = document.getElementById('online-users');
 
+  // Global Chat Elements
+  const globalChatCard = document.getElementById('global-chat-card');
+  const globalChatBackBtn = document.getElementById('global-chat-back-btn');
+  const globalOnlineUsersList = document.getElementById('global-online-users-list');
+  const globalChatContainer = document.getElementById('global-chat-container');
+  const globalMessageForm = document.getElementById('global-message-form');
+  const globalMessageInput = document.getElementById('global-message-input');
+  const recordAudioBtn = document.getElementById('record-audio-btn');
+
+
   // ---=== STATE VARIABLES ===---
   let currentUser = null;
   let currentUserProfile = null;
@@ -382,6 +447,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let messagesListener = null;
   let roomValueListener = null;
   let chatParticipantData = {};
+  
+  // Global Chat State
+  let globalMessagesListener = null;
+  let globalOnlineListener = null;
+  let userStatusRef = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
 
   // ---=== UI HELPER FUNCTIONS ===---
   const setLoadingState = (isLoading, message = '') => {
@@ -400,27 +473,21 @@ document.addEventListener('DOMContentLoaded', () => {
     homeScreen.classList.add('hidden');
     entryScreen.classList.add('hidden');
     chatScreen.classList.add('hidden');
+    globalChatScreen.classList.add('hidden');
     
-    loginScreen.style.display = 'none';
-    homeScreen.style.display = 'none';
-    entryScreen.style.display = 'none';
-    chatScreen.style.display = 'none';
+    document.querySelectorAll('main, div[id$="-screen"]').forEach(el => el.style.display = 'none');
 
-    if(view === 'login') {
-      loginScreen.classList.remove('hidden');
-      loginScreen.style.display = 'flex';
-    }
-    if(view === 'home') {
-      homeScreen.classList.remove('hidden');
-      homeScreen.style.display = 'flex';
-    }
-    if(view === 'scanning') {
-        entryScreen.classList.remove('hidden');
-        entryScreen.style.display = 'flex';
-    }
-    if(view === 'chat') {
-      chatScreen.classList.remove('hidden');
-      chatScreen.style.display = 'flex';
+    const viewMap = {
+      login: loginScreen,
+      home: homeScreen,
+      scanning: entryScreen,
+      chat: chatScreen,
+      'global-chat': globalChatScreen,
+    };
+    
+    if(viewMap[view]) {
+      viewMap[view].classList.remove('hidden');
+      viewMap[view].style.display = 'flex';
     }
   };
   
@@ -645,26 +712,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     roomValueListener = roomRef.on('value', (snapshot) => {
       const data = snapshot.val();
-      // This listener should only act if we are actively in a chat.
-      if (!chatRoomId) {
-        return;
-      }
-
-      // Partner has left if the room is gone, or they are no longer in the members list.
+      if (!chatRoomId) { return; }
       if (!data || !data.members || !data.members[partnerId]) {
-        // Detach listener immediately to prevent multiple triggers.
         roomRef.off('value', roomValueListener);
-        
         setLoadingState(true, 'O estranho saiu do Vazio...');
-        
         setTimeout(() => {
-          setLoadingState(false); // Hide the message before starting the new search.
-          resetState(); // Cleans up the rest of state.
-          findPartner(); // Find a new partner.
+          setLoadingState(false);
+          resetState();
+          findPartner();
         }, 2000);
       } else {
-         const members = data.members;
-         onlineUsersEl.textContent = Object.keys(members).length;
+         onlineUsersEl.textContent = Object.keys(data.members).length;
       }
     });
   };
@@ -677,6 +735,164 @@ document.addEventListener('DOMContentLoaded', () => {
       timestamp: firebase.database.ServerValue.TIMESTAMP
     });
   };
+
+  // ---=== GLOBAL CHAT LOGIC ===---
+
+  const enterGlobalChat = () => {
+    if (!currentUser || !currentUserProfile) return;
+
+    // 1. Set presence
+    const connectedRef = db.ref('.info/connected');
+    userStatusRef = db.ref(`global_online/${currentUser.uid}`);
+    
+    connectedRef.on('value', (snap) => {
+      if (snap.val() === true) {
+        const presenceData = {
+            username: currentUserProfile.username,
+            avatar: currentUserProfile.avatar
+        };
+        userStatusRef.set(presenceData);
+        userStatusRef.onDisconnect().remove();
+      }
+    });
+
+    // 2. Listen for online users
+    globalOnlineListener = db.ref('global_online').on('value', snapshot => {
+        const users = snapshot.val() || {};
+        updateGlobalOnlineList(users);
+    });
+
+    // 3. Listen for messages
+    const messagesRef = db.ref('global_messages').limitToLast(50);
+    globalMessagesListener = messagesRef.on('child_added', snapshot => {
+        addGlobalMessageToUI(snapshot.val());
+    });
+
+    // 4. Show the view
+    showView('global-chat');
+  };
+
+  const leaveGlobalChat = () => {
+    if (globalMessagesListener) db.ref('global_messages').off('child_added', globalMessagesListener);
+    if (globalOnlineListener) db.ref('global_online').off('value', globalOnlineListener);
+    if (userStatusRef) userStatusRef.remove();
+    
+    globalMessagesListener = null;
+    globalOnlineListener = null;
+    userStatusRef = null;
+
+    showView('home');
+  };
+  
+  const updateGlobalOnlineList = (users) => {
+      globalOnlineUsersList.innerHTML = '';
+      Object.values(users).forEach(user => {
+          const userEl = document.createElement('div');
+          userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-500/10';
+          userEl.innerHTML = `
+              <img src="${user.avatar}" alt="${user.username}" class="w-8 h-8 rounded-full">
+              <span class="text-sm font-medium text-white">${user.username}</span>
+          `;
+          globalOnlineUsersList.appendChild(userEl);
+      });
+  };
+
+  const addGlobalMessageToUI = (message) => {
+      if (!message || !currentUser) return;
+      const isMe = message.senderId === currentUser.uid;
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `flex gap-3 my-2 ${isMe ? 'justify-end' : 'justify-start'}`;
+
+      let contentHTML = '';
+      if(message.type === 'audio'){
+        contentHTML = `<audio controls src="${message.text}" class="w-64"></audio>`;
+      } else {
+        contentHTML = `<p class="text-sm break-words">${message.text}</p>`;
+      }
+
+      messageDiv.innerHTML = `
+        ${!isMe ? `<img src="${message.avatar}" class="w-8 h-8 rounded-full self-end">` : ''}
+        <div class="max-w-md">
+            <p class="text-xs mb-1 ${isMe ? 'text-right' : 'text-left'} text-cyan-400">${message.username}</p>
+            <div class="px-4 py-2 rounded-lg ${isMe ? 'bg-green-800/50 border border-green-500/50 neon-border-green' : 'bg-gray-700'}">
+                ${contentHTML}
+            </div>
+        </div>
+        ${isMe ? `<img src="${message.avatar}" class="w-8 h-8 rounded-full self-end">` : ''}
+      `;
+      globalChatContainer.appendChild(messageDiv);
+      globalChatContainer.scrollTop = globalChatContainer.scrollHeight;
+  };
+  
+  const sendGlobalMessage = (text, type = 'text') => {
+      if ((!text || text.trim() === '') || !currentUserProfile) return;
+      
+      db.ref('global_messages').push({
+          senderId: currentUser.uid,
+          username: currentUserProfile.username,
+          avatar: currentUserProfile.avatar,
+          text: text,
+          type: type,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+  };
+
+  const toggleAudioRecording = async () => {
+    if (isRecording) {
+      mediaRecorder.stop();
+      recordAudioBtn.classList.remove('recording-active');
+      isRecording = false;
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        
+        recordAudioBtn.classList.add('recording-active');
+        isRecording = true;
+        
+        mediaRecorder.addEventListener("dataavailable", event => {
+          audioChunks.push(event.data);
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+          const audioBlob = new Blob(audioChunks);
+          uploadAudio(audioBlob);
+          audioChunks = [];
+          stream.getTracks().forEach(track => track.stop());
+        });
+
+      } catch (err) {
+        console.error("Error accessing microphone:", err);
+        alert("Não foi possível acessar o microfone. Verifique as permissões do seu navegador.");
+      }
+    }
+  };
+
+  const uploadAudio = (blob) => {
+    const fileName = `global_audio/${currentUser.uid}_${Date.now()}.webm`;
+    const storageRef = storage.ref(fileName);
+    const uploadTask = storageRef.put(blob);
+
+    setLoadingState(true, 'Enviando áudio...');
+
+    uploadTask.on('state_changed', 
+      null, // No progress handler
+      (error) => {
+        console.error("Upload failed:", error);
+        setLoadingState(false);
+        alert("Falha no upload do áudio.");
+      }, 
+      () => {
+        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+          sendGlobalMessage(downloadURL, 'audio');
+          setLoadingState(false);
+        });
+      }
+    );
+  };
+
 
   // ---=== EVENT LISTENERS ===---
   loginForm.addEventListener('submit', (e) => e.preventDefault());
@@ -707,34 +923,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (profileData.username.length < 3) {
-      fullProfileErrorEl.textContent = 'Username deve ter pelo menos 3 caracteres.';
-      return;
+      fullProfileErrorEl.textContent = 'Username deve ter pelo menos 3 caracteres.'; return;
     }
     if (!profileData.gender || !profileData.region) {
-      fullProfileErrorEl.textContent = 'Por favor, selecione sexo e região.';
-      return;
+      fullProfileErrorEl.textContent = 'Por favor, selecione sexo e região.'; return;
     }
      if (!profileData.avatar) {
-      fullProfileErrorEl.textContent = 'Por favor, insira uma URL de avatar.';
-      return;
+      fullProfileErrorEl.textContent = 'Por favor, insira uma URL de avatar.'; return;
     }
     fullProfileErrorEl.textContent = '';
     setLoadingState(true, 'Salvando perfil...');
     db.ref(`users/${currentUser.uid}`).set(profileData)
       .then(() => {
-        console.log('Profile saved successfully.');
-        currentUserProfile = profileData; // Update cached profile
+        currentUserProfile = profileData;
         populateHomePage(profileData);
         showProfileModal(false);
         showView('home');
       })
       .catch((error) => {
-        console.error("Error saving profile:", error);
         fullProfileErrorEl.textContent = 'Erro ao salvar o perfil. Tente novamente.';
       })
-      .finally(() => {
-        setLoadingState(false);
-      });
+      .finally(() => setLoadingState(false));
   });
 
   userProfileFooter.addEventListener('click', () => {
@@ -747,7 +956,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showProfileModal(true);
   });
 
-  logoutBtn.addEventListener('click', () => {
+  // Navigation from 1-on-1 chat
+  exitToHomeBtn.addEventListener('click', () => {
     resetState();
     showView('home');
   });
@@ -765,6 +975,19 @@ document.addEventListener('DOMContentLoaded', () => {
     messageInput.value = '';
     messageInput.focus();
   });
+
+  // Global Chat Navigation & Events
+  globalChatCard.addEventListener('click', enterGlobalChat);
+  globalChatBackBtn.addEventListener('click', leaveGlobalChat);
+
+  globalMessageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendGlobalMessage(globalMessageInput.value, 'text');
+      globalMessageInput.value = '';
+      globalMessageInput.focus();
+  });
+  
+  recordAudioBtn.addEventListener('click', toggleAudioRecording);
 
   window.addEventListener('beforeunload', () => {
       if(currentUser){
