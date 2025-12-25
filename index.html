@@ -659,23 +659,33 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   const showProfileModal = (show) => {
-    profileModal.style.display = show ? 'flex' : 'none';
-    profileModal.classList.toggle('hidden', !show);
+    if (show) {
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('flex');
+    } else {
+        profileModal.classList.add('hidden');
+        profileModal.classList.remove('flex');
+    }
   };
 
   const showVipModal = (show) => {
-    vipModal.style.display = show ? 'flex' : 'none';
-    vipModal.classList.toggle('hidden', !show);
-    // Correctly toggle flex display
     if (show) {
-        vipModal.classList.remove('flex');
+        vipModal.classList.remove('hidden');
         vipModal.classList.add('flex');
+    } else {
+        vipModal.classList.add('hidden');
+        vipModal.classList.remove('flex');
     }
   };
   
   const showNotificationsModal = (show) => {
-    notificationsModal.style.display = show ? 'flex' : 'none';
-    notificationsModal.classList.toggle('hidden', !show);
+    if (show) {
+        notificationsModal.classList.remove('hidden');
+        notificationsModal.classList.add('flex');
+    } else {
+        notificationsModal.classList.add('hidden');
+        notificationsModal.classList.remove('flex');
+    }
   };
   
   const populateRegions = () => {
@@ -975,11 +985,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const sendFriendRequest = async (friendId) => {
-      if (!currentUser || !friendId) return;
+      if (!currentUser || !friendId || !currentUserProfile) return;
 
       const contactCount = currentUserProfile.contacts ? Object.keys(currentUserProfile.contacts).length : 0;
       if (currentUserProfile.isPremium !== true && contactCount >= 2) {
-          alert('Você atingiu o limite de 2 amigos. Faça upgrade para VOID VIP para adicionar mais!');
           showVipModal(true);
           return;
       }
@@ -1270,7 +1279,6 @@ document.addEventListener('DOMContentLoaded', () => {
           await usageRef.update({ count: usageData.count - 1 });
           findPartner();
       } else {
-          alert('Você atingiu seu limite diário de 3 buscas. Faça upgrade para buscas ilimitadas!');
           showVipModal(true);
       }
   });
