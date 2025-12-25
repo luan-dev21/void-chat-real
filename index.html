@@ -292,6 +292,9 @@
                     </button>
                     <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
                 </div>
+                 <button id="admin-btn" class="hidden ml-4 font-bold py-1 px-3 rounded-md text-black bg-green-500 border border-green-300 neon-border-green">
+                    <i class="fas fa-shield-halved mr-1"></i>ADMIN
+                </button>
             </div>
             <button id="premium-btn" class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
                 <i class="fas fa-star mr-2"></i>ATIVAR PREMIUM
@@ -497,10 +500,69 @@
           </div>
       </div>
     </div>
+    
+    <!-- Support FAB -->
+    <button id="support-fab" class="fixed bottom-5 right-5 w-14 h-14 bg-cyan-500 text-black rounded-full flex items-center justify-center shadow-lg neon-button-glow z-30">
+        <i class="fas fa-question text-2xl"></i>
+    </button>
+
+    <!-- Support Modal -->
+    <div id="support-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
+        <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan space-y-6">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-white neon-text-cyan">SUPORTE</h1>
+                <button id="support-modal-close-btn" class="text-cyan-400 hover:text-white transition-colors">
+                   <i class="fas fa-times fa-lg"></i>
+               </button>
+            </div>
+            <form id="support-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="support-name" class="block text-cyan-400 text-sm mb-1">Nome</label>
+                        <input type="text" id="support-name" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                    </div>
+                    <div>
+                        <label for="support-email" class="block text-cyan-400 text-sm mb-1">E-mail</label>
+                        <input type="email" id="support-email" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                    </div>
+                </div>
+                <div>
+                    <label for="support-subject" class="block text-cyan-400 text-sm mb-1">Tipo de Problema</label>
+                    <select id="support-subject" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
+                        <option value="Bug">Bug</option>
+                        <option value="Sugestão">Sugestão</option>
+                        <option value="Esqueci Senha">Esqueci Senha</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="support-description" class="block text-cyan-400 text-sm mb-1">Descrição</label>
+                    <textarea id="support-description" rows="4" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all"></textarea>
+                </div>
+                <button type="submit" id="support-submit-btn" class="w-full font-bold py-3 px-4 rounded-md text-black bg-cyan-400 neon-button-glow transition-all text-lg">ENVIAR CHAMADO</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="hidden w-full h-full flex flex-col p-4 relative z-20">
+        <div class="flex items-center justify-between border-b border-green-500/30 pb-3 mb-4">
+            <h2 class="text-3xl font-bold text-green-400 neon-text-green">PAINEL ADMIN - TICKETS</h2>
+            <button id="admin-panel-back-btn" class="text-green-400 hover:text-white transition-colors">
+               <i class="fas fa-arrow-left fa-lg mr-2"></i> VOLTAR
+           </button>
+       </div>
+       <div id="admin-tickets-list" class="flex-grow overflow-y-auto space-y-4 no-scrollbar pr-2">
+           <!-- Tickets will be populated here -->
+       </div>
+    </div>
 
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
+  // ---=== ADMIN CONFIG ===---
+  const ADMIN_UID = 'SEU_UID_AQUI'; // Substitua pelo seu UID do Firebase Auth
 
   // Iframe check to prevent disallowed_useragent error with Google Auth
   try {
@@ -551,8 +613,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const privateChatScreen = document.getElementById('private-chat-screen');
   const notificationsModal = document.getElementById('notifications-modal');
   const vipModal = document.getElementById('vip-modal');
+  const supportModal = document.getElementById('support-modal');
+  const adminPanel = document.getElementById('admin-panel');
 
   const enterVoidBtn = document.getElementById('enter-void-btn');
+  const adminBtn = document.getElementById('admin-btn');
+  const adminPanelBackBtn = document.getElementById('admin-panel-back-btn');
+  const adminTicketsList = document.getElementById('admin-tickets-list');
   
   const loginForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
@@ -619,10 +686,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const vipModalCloseBtn = document.getElementById('vip-modal-close-btn');
   const vipModalActionBtn = document.getElementById('vip-modal-action-btn');
 
+  // Support Elements
+  const supportFab = document.getElementById('support-fab');
+  const supportModalCloseBtn = document.getElementById('support-modal-close-btn');
+  const supportForm = document.getElementById('support-form');
+  const supportName = document.getElementById('support-name');
+  const supportEmail = document.getElementById('support-email');
+
 
   // ---=== STATE VARIABLES ===---
   let currentUser = null;
   let currentUserProfile = null;
+  let adminTicketsListener = null;
   // Matchmaking State
   let sessionId = null;
   let chatRoomId = null;
@@ -663,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showView = (view) => {
     ['landing-screen', 'login-screen', 'home-screen', 'entry-screen', 'chat-screen', 'global-chat-screen', 
-     'contacts-screen', 'private-chat-screen'].forEach(id => {
+     'contacts-screen', 'private-chat-screen', 'admin-panel'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.classList.add('hidden');
     });
@@ -671,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewMap = {
       landing: landingScreen, login: loginScreen, home: homeScreen, scanning: entryScreen,
       chat: chatScreen, 'global-chat': globalChatScreen,
-      'contacts': contactsScreen, 'private-chat': privateChatScreen,
+      'contacts': contactsScreen, 'private-chat': privateChatScreen, admin: adminPanel
     };
     if(viewMap[view]) {
       viewMap[view].classList.remove('hidden');
@@ -687,6 +762,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         profileModal.classList.add('hidden');
         profileModal.classList.remove('flex');
+    }
+  };
+
+  const showSupportModal = (show) => {
+    if (show) {
+        if(currentUserProfile) {
+            supportName.value = currentUserProfile.username;
+            supportEmail.value = currentUser.email;
+        }
+        supportModal.classList.remove('hidden');
+        supportModal.classList.add('flex');
+    } else {
+        supportModal.classList.add('hidden');
+        supportModal.classList.remove('flex');
     }
   };
 
@@ -733,18 +822,6 @@ document.addEventListener('DOMContentLoaded', () => {
       avatarInput.value = profile.avatar || '';
   };
   
-  const updatePremiumStatus = (profile) => {
-      const isPremium = profile && profile.isPremium === true;
-      if (isPremium) {
-          premiumBtn.innerHTML = `<i class="fas fa-crown mr-2"></i>CONTA VIP`;
-          premiumBtn.disabled = true;
-          premiumBtn.classList.add('neon-premium-glow');
-      } else {
-          premiumBtn.innerHTML = `<i class="fas fa-star mr-2"></i>ATIVAR PREMIUM`;
-          premiumBtn.disabled = false;
-          premiumBtn.classList.add('neon-premium-glow'); // Keep glow for non-premium too
-      }
-  };
   
   // ---=== AUTHENTICATION & PROFILE LOGIC ===---
   const handleAuthError = (error) => {
@@ -786,10 +863,15 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.getRedirectResult().catch(handleAuthError);
 
     auth.onAuthStateChanged((user) => {
+      adminBtn.classList.add('hidden'); // Hide admin button on auth change
       if (currentUser) db.ref().off(); // Detach old listeners
       
       if (user) {
         currentUser = user;
+        if (currentUser.uid === ADMIN_UID) {
+            adminBtn.classList.remove('hidden');
+        }
+
         const userRef = db.ref(`users/${user.uid}`);
         
         userRef.once('value').then(async (snapshot) => {
@@ -803,7 +885,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             updateUI(currentUserProfile);
             populateProfileModal(currentUserProfile);
-            //updatePremiumStatus(currentUserProfile); // Premium logic is paused
             
             showView('home');
 
@@ -1223,6 +1304,49 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       db.ref('global_messages').push(messageData);
   };
+
+  // ---=== ADMIN PANEL LOGIC ===---
+  const enterAdminPanel = () => {
+    showView('admin');
+    const ticketsRef = db.ref('support_tickets');
+    if (adminTicketsListener) ticketsRef.off('value', adminTicketsListener);
+
+    adminTicketsListener = ticketsRef.on('value', snapshot => {
+        const tickets = snapshot.val() || {};
+        adminTicketsList.innerHTML = ''; // Clear list before rendering
+        if (Object.keys(tickets).length === 0) {
+            adminTicketsList.innerHTML = `<p class="text-gray-500 text-center">Nenhum ticket de suporte encontrado.</p>`;
+            return;
+        }
+        
+        // Sort tickets by timestamp, newest first
+        const sortedTickets = Object.entries(tickets).sort(([, a], [, b]) => b.timestamp - a.timestamp);
+
+        sortedTickets.forEach(([key, ticket]) => {
+            const date = new Date(ticket.timestamp).toLocaleString('pt-BR');
+            const ticketEl = document.createElement('div');
+            ticketEl.className = 'bg-black/50 border border-gray-700 p-4 rounded-lg';
+            ticketEl.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-lg font-bold text-cyan-400">${ticket.subject}</p>
+                        <p class="text-sm text-gray-400">De: ${ticket.name} (${ticket.email})</p>
+                        <p class="text-xs text-gray-500">Data: ${date}</p>
+                    </div>
+                    <span class="text-xs font-bold py-1 px-2 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500">NOVO</span>
+                </div>
+                <p class="mt-3 pt-3 border-t border-gray-700/50 text-gray-300">${ticket.description}</p>
+            `;
+            adminTicketsList.appendChild(ticketEl);
+        });
+    });
+  };
+
+  const leaveAdminPanel = () => {
+      const ticketsRef = db.ref('support_tickets');
+      if (adminTicketsListener) ticketsRef.off('value', adminTicketsListener);
+      showView('home');
+  };
   
   const uploadAudio = (blob) => { /* Unchanged */ };
   const toggleAudioRecording = async () => { /* Unchanged */ };
@@ -1255,7 +1379,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
           updateUI(currentUserProfile);
           populateProfileModal(currentUserProfile);
-          // updatePremiumStatus(currentUserProfile);
           
           showProfileModal(false);
 
@@ -1282,7 +1405,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   matchBtn.addEventListener('click', async () => {
       if (!currentUserProfile) return;
-      // All VIP/limit checks removed for stability
       findPartner();
   });
 
@@ -1312,16 +1434,42 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // VIP Modal Listeners are paused
-  // premiumBtn.addEventListener('click', () => showVipModal(true));
   vipModalCloseBtn.addEventListener('click', () => showVipModal(false));
   vipModal.addEventListener('click', (e) => {
     if (e.target === vipModal) {
       showVipModal(false);
     }
   });
-  // vipModalActionBtn.addEventListener('click', () => {
-  //     alert('Sistema de pagamentos em integração!');
-  // });
+
+  // Support Listeners
+  supportFab.addEventListener('click', () => showSupportModal(true));
+  supportModalCloseBtn.addEventListener('click', () => showSupportModal(false));
+  supportForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ticketData = {
+        name: e.target.elements['support-name'].value,
+        email: e.target.elements['support-email'].value,
+        subject: e.target.elements['support-subject'].value,
+        description: e.target.elements['support-description'].value,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        userId: currentUser ? currentUser.uid : 'anonymous'
+    };
+
+    db.ref('support_tickets').push(ticketData)
+      .then(() => {
+          alert('Chamado enviado com sucesso! Nossa equipe analisará.');
+          supportForm.reset();
+          showSupportModal(false);
+      })
+      .catch(err => {
+          console.error("Support ticket error:", err);
+          alert('Ocorreu um erro ao enviar seu chamado. Tente novamente.');
+      });
+  });
+
+  // Admin Listeners
+  adminBtn.addEventListener('click', enterAdminPanel);
+  adminPanelBackBtn.addEventListener('click', leaveAdminPanel);
 
   window.addEventListener('beforeunload', () => {
     if(currentUser){
