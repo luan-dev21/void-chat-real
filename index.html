@@ -33,6 +33,9 @@
     .neon-border-green {
       box-shadow: 0 0 3px rgba(57, 255, 20, 0.8), 0 0 5px rgba(57, 255, 20, 0.6), 0 0 10px rgba(57, 255, 20, 0.4);
     }
+    .neon-border-gold {
+      box-shadow: 0 0 3px rgba(255, 215, 0, 0.8), 0 0 5px rgba(255, 215, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.4);
+    }
     .neon-text-cyan {
       text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
     }
@@ -42,11 +45,23 @@
     .neon-text-red {
        text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
     }
+    .neon-text-gold {
+        text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700;
+    }
     .neon-button-glow {
       transition: all 0.2s ease-in-out;
     }
     .neon-button-glow:hover {
       box-shadow: 0 0 5px #00ffff, 0 0 15px #00ffff, 0 0 25px #00ffff;
+    }
+    .vip-name {
+      color: #FFD700;
+      text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+      font-weight: bold;
+    }
+    .vip-msg {
+      border-left: 3px solid #FFD700;
+      background: rgba(255, 215, 0, 0.05);
     }
     @keyframes pulse-green {
       0%, 100% { box-shadow: 0 0 2px #39FF14, 0 0 4px #39FF14; }
@@ -74,6 +89,13 @@
         0%, 100% { box-shadow: 0 0 5px #a855f7, 0 0 10px #a855f7; }
         50% { box-shadow: 0 0 15px #a855f7, 0 0 25px #a855f7; }
     }
+     @keyframes pulse-cyan-button {
+      0%, 100% { box-shadow: 0 0 4px #00ffff, 0 0 8px #00ffff; transform: scale(1); }
+      50% { box-shadow: 0 0 12px #00ffff, 0 0 24px #00ffff; transform: scale(1.02); }
+    }
+    .neon-pulse-cyan {
+        animation: pulse-cyan-button 2.5s infinite;
+    }
     .neon-premium-glow {
         animation: pulse-premium 2.5s infinite;
     }
@@ -99,6 +121,30 @@
     /* Hide scrollbar */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* VIP Modal Styles */
+    @keyframes premium-border-glow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .animated-premium-border {
+        position: relative;
+        padding: 3px;
+        background-color: #000;
+        z-index: 1;
+    }
+    .animated-premium-border::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: -1;
+        margin: -3px; /* equal to padding */
+        border-radius: inherit; /* inherit container's border-radius */
+        background: linear-gradient(90deg, #a855f7, #ffd700, #a855f7);
+        background-size: 200% 200%;
+        animation: premium-border-glow 4s linear infinite;
+    }
   </style>
 </head>
 
@@ -110,6 +156,17 @@
     <div class="w-16 h-16 border-4 border-dashed border-cyan-500 rounded-full animate-spin"></div>
     <p id="loading-msg" class="text-xl text-cyan-400 tracking-wider mt-4">Verificando login...</p>
   </div>
+
+  <!-- Landing Screen -->
+  <div id="landing-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 relative z-10">
+      <div class="text-center space-y-8">
+          <h1 class="text-7xl md:text-9xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
+          <button id="enter-void-btn" class="text-2xl font-bold py-4 px-10 rounded-md text-black bg-cyan-400 border-2 border-cyan-200 neon-pulse-cyan transition-all uppercase">
+              [ Entrar no Vazio ]
+          </button>
+      </div>
+  </div>
+
 
   <!-- Login Screen -->
   <div id="login-screen" class="hidden w-full h-full flex items-center justify-center p-4 relative z-10">
@@ -236,7 +293,7 @@
                     <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
                 </div>
             </div>
-            <button class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
+            <button id="premium-btn" class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
                 <i class="fas fa-star mr-2"></i>ATIVAR PREMIUM
             </button>
         </footer>
@@ -416,6 +473,31 @@
         </div>
     </div>
 
+    <!-- VOID VIP Upgrade Modal -->
+    <div id="vip-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xl items-center justify-center p-4 z-50">
+      <div class="w-full max-w-lg rounded-lg animated-premium-border">
+          <div class="relative bg-black/90 p-8 rounded-lg">
+              <button id="vip-modal-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-20">
+                  <i class="fas fa-times fa-2x"></i>
+              </button>
+              <div class="text-center mb-6">
+                  <h2 class="text-3xl font-black text-white" style="text-shadow: 0 0 8px #a855f7;">UPGRADE DE SISTEMA</h2>
+                  <p class="text-4xl font-black text-purple-400" style="text-shadow: 0 0 5px #a855f7, 0 0 10px #ffd700;">VOID VIP</p>
+              </div>
+              <ul class="space-y-4 text-lg mb-8">
+                  <li class="flex items-center gap-4"><i class="fas fa-gem w-6 text-center text-yellow-400 neon-text-gold"></i><span><span class="font-bold">Nome Dourado + Selo VIP:</span> Destaque-se em todos os chats.</span></li>
+                  <li class="flex items-center gap-4"><i class="fas fa-infinity w-6 text-center text-yellow-400 neon-text-gold"></i><span><span class="font-bold">Matching Sem Limites:</span> Encontre novas conexões sem restrições.</span></li>
+                  <li class="flex items-center gap-4"><i class="fas fa-users w-6 text-center text-yellow-400 neon-text-gold"></i><span><span class="font-bold">Amigos Ilimitados:</span> Adicione quantos amigos quiser.</span></li>
+                  <li class="flex items-center gap-4"><i class="fas fa-microphone-alt w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Áudios Ilimitados:</span> Envie quantos áudios quiser.</span></li>
+                  <li class="flex items-center gap-4"><i class="fas fa-shield-alt w-6 text-center text-purple-400" style="text-shadow: 0 0 6px #a855f7;"></i><span><span class="font-bold">Sem Anúncios:</span> Experiência limpa no Vazio.</span></li>
+              </ul>
+              <button id="vip-modal-action-btn" class="w-full font-bold py-4 px-4 rounded-md text-black bg-purple-500 border-2 border-purple-300 transition-all text-xl uppercase tracking-widest neon-premium-glow hover:bg-purple-400">
+                  Adquirir Acesso Agora
+              </button>
+          </div>
+      </div>
+    </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -458,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---=== DOM ELEMENTS ===---
   const loadingOverlay = document.getElementById('loading-overlay');
   const loadingMsg = document.getElementById('loading-msg');
+  const landingScreen = document.getElementById('landing-screen');
   const loginScreen = document.getElementById('login-screen');
   const profileModal = document.getElementById('profile-modal');
   const homeScreen = document.getElementById('home-screen');
@@ -467,6 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const contactsScreen = document.getElementById('contacts-screen');
   const privateChatScreen = document.getElementById('private-chat-screen');
   const notificationsModal = document.getElementById('notifications-modal');
+  const vipModal = document.getElementById('vip-modal');
+
+  const enterVoidBtn = document.getElementById('enter-void-btn');
   
   const loginForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
@@ -528,6 +614,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const notificationsCloseBtn = document.getElementById('notifications-close-btn');
   const notificationsList = document.getElementById('notifications-list');
 
+  // VIP Modal Elements
+  const premiumBtn = document.getElementById('premium-btn');
+  const vipModalCloseBtn = document.getElementById('vip-modal-close-btn');
+  const vipModalActionBtn = document.getElementById('vip-modal-action-btn');
+
 
   // ---=== STATE VARIABLES ===---
   let currentUser = null;
@@ -571,36 +662,52 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const showView = (view) => {
-    // A little more robust way to hide all screens/modals
-    ['login-screen', 'home-screen', 'entry-screen', 'chat-screen', 'global-chat-screen', 
-     'contacts-screen', 'private-chat-screen', 'profile-modal', 'notifications-modal'].forEach(id => {
+    ['landing-screen', 'login-screen', 'home-screen', 'entry-screen', 'chat-screen', 'global-chat-screen', 
+     'contacts-screen', 'private-chat-screen'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) {
-            el.classList.add('hidden');
-            el.style.display = 'none'; // Ensure it's fully hidden
-        }
+        if(el) el.classList.add('hidden');
     });
     
     const viewMap = {
-      login: loginScreen, home: homeScreen, scanning: entryScreen,
+      landing: landingScreen, login: loginScreen, home: homeScreen, scanning: entryScreen,
       chat: chatScreen, 'global-chat': globalChatScreen,
       'contacts': contactsScreen, 'private-chat': privateChatScreen,
     };
     if(viewMap[view]) {
       viewMap[view].classList.remove('hidden');
-      // Use flex for all main views for consistency
-      viewMap[view].style.display = 'flex'; 
+      // Use flex for all main screens for consistency
+      viewMap[view].classList.add('flex');
     }
   };
   
   const showProfileModal = (show) => {
-    profileModal.style.display = show ? 'flex' : 'none';
-    profileModal.classList.toggle('hidden', !show);
+    if (show) {
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('flex');
+    } else {
+        profileModal.classList.add('hidden');
+        profileModal.classList.remove('flex');
+    }
+  };
+
+  const showVipModal = (show) => {
+    if (show) {
+        vipModal.classList.remove('hidden');
+        vipModal.classList.add('flex');
+    } else {
+        vipModal.classList.add('hidden');
+        vipModal.classList.remove('flex');
+    }
   };
   
   const showNotificationsModal = (show) => {
-    notificationsModal.style.display = show ? 'flex' : 'none';
-    notificationsModal.classList.toggle('hidden', !show);
+    if (show) {
+        notificationsModal.classList.remove('hidden');
+        notificationsModal.classList.add('flex');
+    } else {
+        notificationsModal.classList.add('hidden');
+        notificationsModal.classList.remove('flex');
+    }
   };
   
   const populateRegions = () => {
@@ -617,7 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
       userRegionHome.textContent = profile.region;
   };
   
-  // --- RULE 2 (part 2): New function to pre-fill the modal ---
   const populateProfileModal = (profile) => {
       if (!profile) return;
       usernameInput.value = profile.username || '';
@@ -625,6 +731,19 @@ document.addEventListener('DOMContentLoaded', () => {
       regionSelect.value = profile.region || '';
       interestsInput.value = profile.interests || '';
       avatarInput.value = profile.avatar || '';
+  };
+  
+  const updatePremiumStatus = (profile) => {
+      const isPremium = profile && profile.isPremium === true;
+      if (isPremium) {
+          premiumBtn.innerHTML = `<i class="fas fa-crown mr-2"></i>CONTA VIP`;
+          premiumBtn.disabled = true;
+          premiumBtn.classList.add('neon-premium-glow');
+      } else {
+          premiumBtn.innerHTML = `<i class="fas fa-star mr-2"></i>ATIVAR PREMIUM`;
+          premiumBtn.disabled = false;
+          premiumBtn.classList.add('neon-premium-glow'); // Keep glow for non-premium too
+      }
   };
   
   // ---=== AUTHENTICATION & PROFILE LOGIC ===---
@@ -663,14 +782,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   const startApp = () => {
-    setLoadingState(true, 'Verificando sessão...');
+    setLoadingState(true, 'Inicializando Vazio...');
     auth.getRedirectResult().catch(handleAuthError);
 
     auth.onAuthStateChanged((user) => {
-      // Clean up listeners for previous user to prevent memory leaks on logout
-      if (currentUser) {
-        db.ref().off();
-      }
+      if (currentUser) db.ref().off(); // Detach old listeners
       
       if (user) {
         currentUser = user;
@@ -685,18 +801,17 @@ document.addEventListener('DOMContentLoaded', () => {
             profile.contacts = contactsSnapshot.val() || {};
             currentUserProfile = profile;
             
-            // --- RULE 2: Populate footer AND modal on initial load ---
             updateUI(currentUserProfile);
             populateProfileModal(currentUserProfile);
+            //updatePremiumStatus(currentUserProfile); // Premium logic is paused
             
-            showProfileModal(false);
             showView('home');
 
-            // Initialize persistent real-time services
             managePresence(user);
             listenForNotifications(user);
             listenForFriendRequests(user);
           } else {
+            // Logged in, but profile is incomplete
             currentUserProfile = null;
             showProfileModal(true);
           }
@@ -704,22 +819,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch((error) => {
           console.error("Error fetching user profile:", error);
           setLoadingState(false);
-          showView('login');
+          showView('login'); // Fallback to login on profile fetch error
         });
-
       } else {
+        // No user is logged in
         currentUser = null;
         currentUserProfile = null;
-        showView('login');
+        showView('landing'); // Show the new landing screen
         setLoadingState(false);
       }
     });
   };
 
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => {
-        startApp();
-    })
+    .then(() => startApp())
     .catch((error) => {
         console.error("Error setting persistence:", error);
         startApp();
@@ -768,8 +881,9 @@ document.addEventListener('DOMContentLoaded', () => {
     partnerId = pId;
     
     const partnerProfileSnapshot = await db.ref(`users/${partnerId}`).once('value');
+    chatParticipantData = {}; // Reset before filling
     chatParticipantData[currentUser.uid] = currentUserProfile;
-    chatParticipantData[partnerId] = partnerProfileSnapshot.val() || { username: 'Estranho' };
+    chatParticipantData[partnerId] = partnerProfileSnapshot.val() || { username: 'Estranho', isPremium: false };
     
     myAvatarChatEl.src = currentUserProfile.avatar;
     partnerAvatarChatEl.src = chatParticipantData[partnerId].avatar;
@@ -787,7 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!chatRoomId || !data || !data.members || !data.members[partnerId]) {
         if(roomRef) roomRef.off('value', roomValueListener);
         setLoadingState(true, 'O estranho saiu do Vazio...');
-        setTimeout(() => { setLoadingState(false); resetRandomChatState(); findPartner(); }, 2000);
+        setTimeout(() => { setLoadingState(false); resetRandomChatState(); showView('home'); }, 2000);
       } else {
          onlineUsersEl.textContent = Object.keys(data.members).length;
       }
@@ -895,7 +1009,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const sendFriendRequest = async (friendId) => {
-      if (!currentUser || !friendId) return;
+      if (!currentUser || !friendId || !currentUserProfile) return;
+      
       const requestData = { from: currentUser.uid, username: currentUserProfile.username, avatar: currentUserProfile.avatar };
       const updates = {};
       updates[`/friend_requests/${friendId}/${currentUser.uid}`] = requestData;
@@ -924,6 +1039,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---=== PRIVATE CHAT & CONTACTS LOGIC ===---
   const enterContactsScreen = () => {
+      if (!currentUser || !currentUserProfile) return;
       showView('contacts');
       if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
       
@@ -982,11 +1098,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
   };
 
-  const startPrivateChat = (friendId, friendProfile) => {
+  const startPrivateChat = async (friendId, friendProfile) => {
       leaveContactsScreen();
       currentPrivateChatFriend = { id: friendId, ...friendProfile };
       privateChatRoomId = [currentUser.uid, friendId].sort().join('_');
       
+      // Setup participant data for consistent message rendering
+      chatParticipantData = {};
+      chatParticipantData[currentUser.uid] = currentUserProfile;
+      chatParticipantData[friendId] = friendProfile;
+
       privateChatPartnerAvatar.src = friendProfile.avatar;
       privateChatPartnerName.textContent = friendProfile.username;
 
@@ -1000,7 +1121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       privateChatContainer.innerHTML = '';
       const messagesRef = db.ref(`private_messages/${privateChatRoomId}/messages`).limitToLast(100);
-      privateMessagesListener = messagesRef.on('child_added', snap => addMessageToUI(snap.val(), privateChatContainer));
+      privateMessagesListener = messagesRef.on('child_added', snap => addMessageToUI(snap.val(), privateChatContainer, chatParticipantData));
       showView('private-chat');
   };
 
@@ -1012,7 +1133,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sendPrivateMessage = (text) => {
       if (text.trim() === '' || !privateChatRoomId || !currentPrivateChatFriend) return;
-      const messageData = { senderId: currentUser.uid, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
+      const messageData = { 
+          senderId: currentUser.uid, 
+          text: text, 
+          isPremium: currentUserProfile.isPremium === true,
+          timestamp: firebase.database.ServerValue.TIMESTAMP 
+      };
       db.ref(`private_messages/${privateChatRoomId}/messages`).push(messageData);
       db.ref(`notifications/${currentPrivateChatFriend.id}/${currentUser.uid}`).set(true);
   };
@@ -1022,37 +1148,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageData = {
         senderId: currentUser.uid,
         text: text,
+        isPremium: currentUserProfile.isPremium === true,
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
     roomRef.child('messages').push(messageData);
   };
   
-  // Generic Message Renderer
-  const addMessageToUI = (message, container, participants = null) => {
-    if (!message || !currentUser || !container) return;
-    const isMe = message.senderId === currentUser.uid;
-    const senderUsername = participants ? (participants[message.senderId]?.username || 'Estranho') : null;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `flex flex-col fade-in ${isMe ? 'items-end' : 'items-start'}`;
-    const header = senderUsername ? `<p class="text-xs mb-1 ${isMe ? 'text-right' : 'text-left'} text-cyan-400">${senderUsername}</p>` : '';
-    messageDiv.innerHTML = `<div class="max-w-md">${header}<div class="px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}"><p class="text-sm break-words">${message.text}</p></div></div>`;
-    container.appendChild(messageDiv);
-    container.scrollTop = container.scrollHeight;
+  const addMessageToUI = (message, container, participants) => {
+      if (!message || !currentUser || !container || !participants) return;
+      const senderProfile = participants[message.senderId] || { username: 'Estranho', isPremium: message.isPremium };
+      const isMe = message.senderId === currentUser.uid;
+      const isVip = senderProfile.isPremium === true;
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `flex flex-col fade-in ${isMe ? 'items-end' : 'items-start'}`;
+
+      const usernameHTML = isVip 
+          ? `<p class="text-xs mb-1 vip-name">${senderProfile.username} [VIP]</p>`
+          : `<p class="text-xs mb-1 text-cyan-400">${senderProfile.username}</p>`;
+
+      const bubbleClasses = isVip 
+          ? 'vip-msg px-4 py-2 rounded-lg'
+          : `px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}`;
+          
+      messageDiv.innerHTML = `
+          <div class="max-w-md">
+              ${!isMe ? usernameHTML : ''}
+              <div class="${bubbleClasses}">
+                  <p class="text-sm break-words">${message.text}</p>
+              </div>
+          </div>`;
+      container.appendChild(messageDiv);
+      container.scrollTop = container.scrollHeight;
   };
 
   const addGlobalMessageToUI = (message) => {
       if (!message || !currentUser) return;
       const isMe = message.senderId === currentUser.uid;
+      const isVip = message.isPremium === true;
+      
       const messageDiv = document.createElement('div');
       messageDiv.className = `flex gap-3 my-2 ${isMe ? 'justify-end' : 'justify-start'}`;
       let contentHTML = message.type === 'audio' ? `<audio controls src="${message.text}" class="w-64"></audio>` : `<p class="text-sm break-words">${message.text}</p>`;
       
+      const usernameHTML = isVip
+          ? `<p class="text-xs mb-1 vip-name">${message.username} [VIP]</p>`
+          : `<p class="text-xs mb-1 text-cyan-400">${message.username}</p>`;
+
+      const bubbleClasses = isVip
+          ? 'vip-msg px-4 py-2 rounded-lg'
+          : `px-4 py-2 rounded-lg ${isMe ? 'bg-green-800/50 border border-green-500/50 neon-border-green' : 'bg-gray-700'}`;
+
       messageDiv.innerHTML = `
         ${!isMe ? `<img src="${message.avatar}" class="w-8 h-8 rounded-full self-end">` : ''}
         <div class="max-w-md">
-            <p class="text-xs mb-1 ${isMe ? 'text-right' : 'text-left'} text-cyan-400">${message.username}</p>
-            <div class="px-4 py-2 rounded-lg ${isMe ? 'bg-green-800/50 border border-green-500/50 neon-border-green' : 'bg-gray-700'}">${contentHTML}</div>
+            <div class="${isMe ? 'text-right' : 'text-left'}">${usernameHTML}</div>
+            <div class="${bubbleClasses}">${contentHTML}</div>
         </div>
         ${isMe ? `<img src="${message.avatar}" class="w-8 h-8 rounded-full self-end">` : ''}`;
       globalChatContainer.appendChild(messageDiv);
@@ -1061,7 +1212,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sendGlobalMessage = (text, type = 'text') => {
       if ((!text || text.trim() === '') || !currentUserProfile) return;
-      db.ref('global_messages').push({ senderId: currentUser.uid, username: currentUserProfile.username, avatar: currentUserProfile.avatar, text: text, type: type, timestamp: firebase.database.ServerValue.TIMESTAMP });
+      const messageData = {
+          senderId: currentUser.uid,
+          username: currentUserProfile.username,
+          avatar: currentUserProfile.avatar,
+          isPremium: currentUserProfile.isPremium === true,
+          text: text,
+          type: type,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+      };
+      db.ref('global_messages').push(messageData);
   };
   
   const uploadAudio = (blob) => { /* Unchanged */ };
@@ -1069,6 +1229,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ---=== EVENT LISTENERS ===---
+  enterVoidBtn.addEventListener('click', () => showView('login'));
+
   loginForm.addEventListener('submit', (e) => e.preventDefault());
   loginBtn.addEventListener('click', () => { setLoadingState(true, 'Entrando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
   signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
@@ -1085,15 +1247,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     db.ref(`users/${currentUser.uid}`).update(profileData)
       .then(async () => {
-          console.log('Dados salvos com sucesso!');
           const wasFirstTimeSetup = !currentUserProfile;
-          
           const contactsSnapshot = await db.ref(`users/${currentUser.uid}/contacts`).once('value');
-          currentUserProfile = { ...profileData, contacts: contactsSnapshot.val() || {} };
+          // Important: Preserve existing premium status when updating profile
+          const isPremium = currentUserProfile ? currentUserProfile.isPremium : false;
+          currentUserProfile = { ...profileData, isPremium, contacts: contactsSnapshot.val() || {} };
 
-          // --- RULE 1: Update UI and Modal after saving ---
           updateUI(currentUserProfile);
           populateProfileModal(currentUserProfile);
+          // updatePremiumStatus(currentUserProfile);
           
           showProfileModal(false);
 
@@ -1106,7 +1268,6 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch((err) => {
           console.error("Erro ao salvar perfil:", err);
-          alert("Ocorreu um erro ao salvar seu perfil. Tente novamente. Erro: " + err.message);
           fullProfileErrorEl.textContent = 'Erro ao salvar.';
       })
       .finally(() => {
@@ -1118,7 +1279,13 @@ document.addEventListener('DOMContentLoaded', () => {
   userProfileFooter.addEventListener('click', () => showProfileModal(true));
   
   randomChatExitBtn.addEventListener('click', () => { resetRandomChatState(); showView('home'); });
-  matchBtn.addEventListener('click', findPartner);
+  
+  matchBtn.addEventListener('click', async () => {
+      if (!currentUserProfile) return;
+      // All VIP/limit checks removed for stability
+      findPartner();
+  });
+
   nextBtn.addEventListener('click', () => { resetRandomChatState(); findPartner(); });
   messageForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(messageInput.value); messageInput.value = ''; });
 
@@ -1132,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   privateChatCard.addEventListener('click', enterContactsScreen);
   contactsBackBtn.addEventListener('click', () => { leaveContactsScreen(); showView('home'); });
-  privateChatBackBtn.addEventListener('click', () => { leavePrivateChat(); showView('home'); });
+  privateChatBackBtn.addEventListener('click', () => { leavePrivateChat(); enterContactsScreen(); });
   privateMessageForm.addEventListener('submit', (e) => { e.preventDefault(); sendPrivateMessage(privateMessageInput.value); privateMessageInput.value = ''; });
 
   notificationsBtn.addEventListener('click', () => showNotificationsModal(true));
@@ -1143,18 +1310,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const declineBtn = e.target.closest('.decline-request-btn');
       if(declineBtn) declineFriendRequest(declineBtn.dataset.requesterId);
   });
+  
+  // VIP Modal Listeners are paused
+  // premiumBtn.addEventListener('click', () => showVipModal(true));
+  vipModalCloseBtn.addEventListener('click', () => showVipModal(false));
+  vipModal.addEventListener('click', (e) => {
+    if (e.target === vipModal) {
+      showVipModal(false);
+    }
+  });
+  // vipModalActionBtn.addEventListener('click', () => {
+  //     alert('Sistema de pagamentos em integração!');
+  // });
 
   window.addEventListener('beforeunload', () => {
-    // This is a synchronous, best-effort cleanup. The primary, more reliable
-    // cleanup is handled by the `onDisconnect()` hooks set up when a user
-    // enters a queue or a room. This does NOT remove user profile data.
     if(currentUser){
-      if (sessionId) {
-          db.ref(`queue/${sessionId}`).remove();
-      }
-      if (roomRef) {
-          roomRef.remove();
-      }
+      if (sessionId) db.ref(`queue/${sessionId}`).remove();
+      if (roomRef) roomRef.remove();
     }
   });
 });
