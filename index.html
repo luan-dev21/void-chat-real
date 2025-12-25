@@ -145,11 +145,6 @@
         background-size: 200% 200%;
         animation: premium-border-glow 4s linear infinite;
     }
-    .admin-filter-btn.active {
-        background-color: #00ffff;
-        color: black;
-        box-shadow: 0 0 10px #00ffff;
-    }
   </style>
 </head>
 
@@ -297,14 +292,8 @@
                     </button>
                     <span id="friend-request-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
                 </div>
-                <div class="relative">
-                    <button id="my-tickets-btn" class="text-2xl text-cyan-400 hover:text-white transition-colors">
-                        <i class="fas fa-headset"></i>
-                    </button>
-                    <span id="ticket-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
-                </div>
                  <button id="admin-btn" class="hidden ml-4 font-bold py-1 px-3 rounded-md text-black bg-green-500 border border-green-300 neon-border-green">
-                    <i class="fas fa-shield-halved mr-1"></i>PAINEL ADMIN
+                    <i class="fas fa-shield-halved mr-1"></i>ADMIN
                 </button>
             </div>
             <button id="premium-btn" class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
@@ -556,88 +545,37 @@
     </div>
 
     <!-- Admin Panel -->
-    <div id="admin-panel" class="hidden w-full h-full flex-col p-4 relative z-20">
+    <div id="admin-panel" class="hidden w-full h-full flex flex-col p-4 relative z-20">
         <div class="flex items-center justify-between border-b border-green-500/30 pb-3 mb-4">
             <h2 class="text-3xl font-bold text-green-400 neon-text-green">PAINEL ADMIN - TICKETS</h2>
             <button id="admin-panel-back-btn" class="text-green-400 hover:text-white transition-colors">
                <i class="fas fa-arrow-left fa-lg mr-2"></i> VOLTAR
            </button>
        </div>
-       <div id="admin-filters" class="flex items-center gap-2 mb-4">
-            <button data-filter="Pendentes" class="admin-filter-btn font-bold py-1 px-3 rounded-md text-cyan-400 border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all active">Pendentes</button>
-            <button data-filter="Resolvido" class="admin-filter-btn font-bold py-1 px-3 rounded-md text-cyan-400 border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Resolvidos</button>
-       </div>
        <div id="admin-tickets-list" class="flex-grow overflow-y-auto space-y-4 no-scrollbar pr-2">
            <!-- Tickets will be populated here -->
        </div>
-    </div>
-    
-    <!-- User Tickets Modal (List View) -->
-    <div id="user-tickets-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-full max-w-2xl h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-6 neon-border-cyan flex flex-col">
-            <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
-                <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan">MEUS CHAMADOS</h2>
-                <button id="user-tickets-close-btn" class="text-cyan-400 hover:text-white transition-colors">
-                   <i class="fas fa-times fa-lg"></i>
-               </button>
-           </div>
-           <div id="user-tickets-list" class="flex-grow overflow-y-auto space-y-3 no-scrollbar pr-2">
-               <!-- User tickets list will be populated here -->
-           </div>
-        </div>
-    </div>
-
-    <!-- Ticket Chat Modal (Used by Admin and User) -->
-    <div id="ticket-chat-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div id="ticket-chat-modal-content" class="w-full max-w-2xl h-[90vh] bg-black/50 border rounded-lg flex flex-col">
-            <!-- Header -->
-            <div id="ticket-chat-modal-header" class="p-4 border-b flex justify-between items-center">
-                <div>
-                    <h2 id="ticket-chat-modal-subject" class="text-xl font-bold"></h2>
-                    <p id="ticket-chat-modal-status" class="text-sm"></p>
-                </div>
-                <button id="ticket-chat-modal-close-btn" class="text-2xl">&times;</button>
-            </div>
-            <!-- Messages -->
-            <div id="ticket-chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
-                <!-- Messages will be injected here -->
-            </div>
-            <!-- Controls -->
-            <div class="p-4 border-t">
-                <!-- Admin Controls -->
-                <div id="ticket-chat-admin-controls" class="hidden mb-4 p-3 border border-gray-600 rounded-lg">
-                    <label for="ticket-chat-status-select" class="block text-sm mb-1">Alterar Status</label>
-                    <select id="ticket-chat-status-select" class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3">
-                        <option value="Aberto">Aberto</option>
-                        <option value="Aguardando Admin">Aguardando Admin</option>
-                        <option value="Aguardando Retorno do Cliente">Aguardando Retorno do Cliente</option>
-                        <option value="Resolvido">Resolvido</option>
-                    </select>
-                </div>
-                <!-- Message Form -->
-                <form id="ticket-chat-form">
-                    <input type="hidden" id="ticket-chat-id">
-                    <div class="flex items-center gap-3">
-                        <input type="text" id="ticket-chat-message-input" placeholder="Digite sua mensagem..." autocomplete="off" class="flex-1 bg-black/50 border rounded-md py-2 px-4 focus:outline-none focus:ring-2 text-white transition-all">
-                        <button type="submit" id="ticket-chat-send-btn" class="font-bold py-2 px-4 rounded-md transition-colors">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </form>
-                <!-- User Controls -->
-                 <div id="ticket-chat-user-controls" class="hidden mt-4">
-                    <button id="ticket-chat-delete-btn" class="w-full text-sm py-2 px-4 rounded-md bg-red-800/60 hover:bg-red-700/60 border border-red-500/50 text-red-300 transition-colors">Apagar Chamado</button>
-                </div>
-            </div>
-        </div>
     </div>
 
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ---=== GLOBAL VARIABLES & CONFIG ===---
-  const ADMIN_UID = 'lxWxEwMGCee1Hcu01qIdHydafQf2';
+  // ---=== ADMIN CONFIG ===---
+  const ADMIN_UID = 'SEU_UID_AQUI'; // Substitua pelo seu UID do Firebase Auth
+
+  // Iframe check to prevent disallowed_useragent error with Google Auth
+  try {
+    if (window.self !== window.top) {
+        document.body.innerHTML = `<div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center"><h1 class="text-2xl font-bold">ERRO: Este aplicativo não pode ser executado em um iframe.</h1></div>`;
+        return;
+    }
+  } catch (e) {
+    console.warn("Iframe check failed, might be due to cross-origin policies. Proceeding with caution.");
+  }
+
+
+  // ---=== FIREBASE CONFIGURATION ===---
   const firebaseConfig = {
     apiKey: "AIzaSyCJY8KnCAmegTJKgxk8Vb0fdDU64JV-zbU",
     authDomain: "meuchatreal.firebaseapp.com",
@@ -648,39 +586,20 @@ document.addEventListener('DOMContentLoaded', () => {
     appId: "1:271430524108:web:e23b8c36a188f150467669"
   };
 
-  // State Variables
+  // ---=== INITIALIZATION ===---
   let db, auth, storage;
-  let currentUser = null;
-  let currentUserProfile = null;
-  let adminTicketsListener = null;
-  let currentAdminTicketData = null;
-  let userTicketsListener = null;
-  let ticketRepliesListener = null;
-  let currentTicketChatListener = null;
-  let sessionId = null;
-  let chatRoomId = null;
-  let partnerId = null;
-  let roomRef = null;
-  let messagesListener = null;
-  let roomValueListener = null;
-  let chatParticipantData = {};
-  let globalMessagesListener = null;
-  let globalOnlineListener = null;
-  let mediaRecorder = null;
-  let audioChunks = [];
-  let isRecording = false;
-  let currentPrivateChatFriend = null;
-  let privateChatRoomId = null;
-  let privateMessagesListener = null;
-  let contactsListener = null;
-  let presenceListener = null;
-  let notificationListener = null;
-  let friendRequestListener = null;
-  let sentRequestListener = null;
-  let receivedFriendRequests = {};
-  let sentFriendRequests = {};
-  
-  // ---=== DOM ELEMENT DECLARATIONS ===---
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    auth = firebase.auth();
+    storage = firebase.storage();
+  } catch (e) {
+    console.error("Firebase initialization failed.", e);
+    document.body.innerHTML = `<div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center"><h1 class="text-2xl font-bold">ERRO CRÍTICO: Falha na inicialização do Firebase. Verifique a configuração.</h1></div>`;
+    return;
+  }
+
+  // ---=== DOM ELEMENTS ===---
   const loadingOverlay = document.getElementById('loading-overlay');
   const loadingMsg = document.getElementById('loading-msg');
   const landingScreen = document.getElementById('landing-screen');
@@ -696,105 +615,116 @@ document.addEventListener('DOMContentLoaded', () => {
   const vipModal = document.getElementById('vip-modal');
   const supportModal = document.getElementById('support-modal');
   const adminPanel = document.getElementById('admin-panel');
-  const userTicketsModal = document.getElementById('user-tickets-modal');
-  const ticketChatModal = document.getElementById('ticket-chat-modal');
+
   const enterVoidBtn = document.getElementById('enter-void-btn');
+  const adminBtn = document.getElementById('admin-btn');
+  const adminPanelBackBtn = document.getElementById('admin-panel-back-btn');
+  const adminTicketsList = document.getElementById('admin-tickets-list');
+  
+  const loginForm = document.getElementById('login-form');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
   const loginBtn = document.getElementById('login-btn');
   const signupBtn = document.getElementById('signup-btn');
   const googleSigninBtn = document.getElementById('google-signin-btn');
-  const saveFullProfileBtn = document.getElementById('save-full-profile-btn');
+  const authErrorEl = document.getElementById('auth-error');
   const randomChatExitBtn = document.getElementById('random-chat-exit-btn');
-  const nextBtn = document.getElementById('next-btn');
-  const globalChatBackBtn = document.getElementById('global-chat-back-btn');
-  const contactsBackBtn = document.getElementById('contacts-back-btn');
-  const privateChatBackBtn = document.getElementById('private-chat-back-btn');
-  const notificationsBtn = document.getElementById('notifications-btn');
-  const notificationsCloseBtn = document.getElementById('notifications-close-btn');
-  const premiumBtn = document.getElementById('premium-btn');
-  const vipModalCloseBtn = document.getElementById('vip-modal-close-btn');
-  const vipModalActionBtn = document.getElementById('vip-modal-action-btn');
-  const supportFab = document.getElementById('support-fab');
-  const supportModalCloseBtn = document.getElementById('support-modal-close-btn');
-  const myTicketsBtn = document.getElementById('my-tickets-btn');
-  const userTicketsCloseBtn = document.getElementById('user-tickets-close-btn');
-  const adminBtn = document.getElementById('admin-btn');
-  const adminPanelBackBtn = document.getElementById('admin-panel-back-btn');
-  const ticketChatModalCloseBtn = document.getElementById('ticket-chat-modal-close-btn');
-  const ticketChatDeleteBtn = document.getElementById('ticket-chat-delete-btn');
-  const loginForm = document.getElementById('login-form');
+
   const profileForm = document.getElementById('profile-form');
-  const messageForm = document.getElementById('message-form');
-  const globalMessageForm = document.getElementById('global-message-form');
-  const privateMessageForm = document.getElementById('private-message-form');
-  const supportForm = document.getElementById('support-form');
-  const ticketChatForm = document.getElementById('ticket-chat-form');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
   const usernameInput = document.getElementById('username-input');
   const genderSelect = document.getElementById('gender-select');
   const regionSelect = document.getElementById('region-select');
   const interestsInput = document.getElementById('interests-input');
   const avatarInput = document.getElementById('avatar-input');
-  const messageInput = document.getElementById('message-input');
-  const globalMessageInput = document.getElementById('global-message-input');
-  const privateMessageInput = document.getElementById('private-message-input');
-  const supportName = document.getElementById('support-name');
-  const supportEmail = document.getElementById('support-email');
-  const ticketChatMessageInput = document.getElementById('ticket-chat-message-input');
-  const ticketChatStatusSelect = document.getElementById('ticket-chat-status-select');
-  const ticketChatIdInput = document.getElementById('ticket-chat-id');
-  const authErrorEl = document.getElementById('auth-error');
+  const saveFullProfileBtn = document.getElementById('save-full-profile-btn');
   const fullProfileErrorEl = document.getElementById('full-profile-error');
+
   const userProfileFooter = document.getElementById('user-profile-footer');
   const userAvatarHome = document.getElementById('user-avatar-home');
   const userNameHome = document.getElementById('user-name-home');
   const userRegionHome = document.getElementById('user-region-home');
-  const friendRequestNotification = document.getElementById('friend-request-notification');
-  const ticketNotification = document.getElementById('ticket-notification');
+
+  const matchBtn = document.getElementById('match-btn');
+  const messageForm = document.getElementById('message-form');
+  const messageInput = document.getElementById('message-input');
   const chatContainer = document.getElementById('chat-container');
   const partnerNameEl = document.getElementById('partner-name');
   const partnerInfoEl = document.getElementById('partner-info');
   const myAvatarChatEl = document.getElementById('my-avatar-chat');
   const partnerAvatarChatEl = document.getElementById('partner-avatar-chat');
+  const nextBtn = document.getElementById('next-btn');
   const onlineUsersEl = document.getElementById('online-users');
+
+  // Global Chat Elements
   const globalChatCard = document.getElementById('global-chat-card');
-  const matchBtn = document.getElementById('match-btn');
-  const privateChatCard = document.getElementById('private-chat-card');
+  const globalChatBackBtn = document.getElementById('global-chat-back-btn');
   const globalOnlineUsersList = document.getElementById('global-online-users-list');
   const globalChatContainer = document.getElementById('global-chat-container');
+  const globalMessageForm = document.getElementById('global-message-form');
+  const globalMessageInput = document.getElementById('global-message-input');
+  const recordAudioBtn = document.getElementById('record-audio-btn');
+  
+  // Private Chat, Contacts & Notifications Elements
+  const privateChatCard = document.getElementById('private-chat-card');
   const privateChatNotification = document.getElementById('private-chat-notification');
+  const contactsBackBtn = document.getElementById('contacts-back-btn');
   const contactsList = document.getElementById('contacts-list');
-  const privateChatContainer = document.getElementById('private-chat-container');
+  const privateChatBackBtn = document.getElementById('private-chat-back-btn');
   const privateChatPartnerAvatar = document.getElementById('private-chat-partner-avatar');
   const privateChatPartnerName = document.getElementById('private-chat-partner-name');
   const privateChatPartnerStatus = document.getElementById('private-chat-partner-status');
+  const privateChatContainer = document.getElementById('private-chat-container');
+  const privateMessageForm = document.getElementById('private-message-form');
+  const privateMessageInput = document.getElementById('private-message-input');
+  const notificationsBtn = document.getElementById('notifications-btn');
+  const friendRequestNotification = document.getElementById('friend-request-notification');
+  const notificationsCloseBtn = document.getElementById('notifications-close-btn');
   const notificationsList = document.getElementById('notifications-list');
-  const adminTicketsList = document.getElementById('admin-tickets-list');
-  const adminFilters = document.getElementById('admin-filters');
-  const userTicketsList = document.getElementById('user-tickets-list');
-  const ticketChatModalContent = document.getElementById('ticket-chat-modal-content');
-  const ticketChatModalHeader = document.getElementById('ticket-chat-modal-header');
-  const ticketChatModalSubject = document.getElementById('ticket-chat-modal-subject');
-  const ticketChatModalStatus = document.getElementById('ticket-chat-modal-status');
-  const ticketChatMessagesContainer = document.getElementById('ticket-chat-messages-container');
-  const ticketChatAdminControls = document.getElementById('ticket-chat-admin-controls');
-  const ticketChatUserControls = document.getElementById('ticket-chat-user-controls');
-  const ticketChatSendBtn = document.getElementById('ticket-chat-send-btn');
 
-  // ---=== INITIALIZATION & BOOTSTRAP ===---
-  try {
-    if (window.self !== window.top) { throw new Error("iFrame not allowed"); }
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-    auth = firebase.auth();
-    storage = firebase.storage();
-  } catch (e) {
-    console.error("Initialization Failed:", e.message);
-    document.body.innerHTML = `<div class="bg-black text-red-500 w-screen h-screen flex items-center justify-center p-4 text-center"><h1 class="text-2xl font-bold">ERRO CRÍTICO: ${e.message}. Verifique a configuração.</h1></div>`;
-    return;
-  }
-  
-  // ---=== UI HELPER & NAVIGATION FUNCTIONS ===---
+  // VIP Modal Elements
+  const premiumBtn = document.getElementById('premium-btn');
+  const vipModalCloseBtn = document.getElementById('vip-modal-close-btn');
+  const vipModalActionBtn = document.getElementById('vip-modal-action-btn');
+
+  // Support Elements
+  const supportFab = document.getElementById('support-fab');
+  const supportModalCloseBtn = document.getElementById('support-modal-close-btn');
+  const supportForm = document.getElementById('support-form');
+  const supportName = document.getElementById('support-name');
+  const supportEmail = document.getElementById('support-email');
+
+
+  // ---=== STATE VARIABLES ===---
+  let currentUser = null;
+  let currentUserProfile = null;
+  let adminTicketsListener = null;
+  // Matchmaking State
+  let sessionId = null;
+  let chatRoomId = null;
+  let partnerId = null;
+  let roomRef = null;
+  let messagesListener = null;
+  let roomValueListener = null;
+  let chatParticipantData = {};
+  // Global Chat State
+  let globalMessagesListener = null;
+  let globalOnlineListener = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+  // Private Chat State & Friends
+  let currentPrivateChatFriend = null;
+  let privateChatRoomId = null;
+  let privateMessagesListener = null;
+  let contactsListener = null;
+  let presenceListener = null;
+  let notificationListener = null;
+  let friendRequestListener = null;
+  let sentRequestListener = null;
+  let receivedFriendRequests = {};
+  let sentFriendRequests = {};
+
+  // ---=== UI HELPER FUNCTIONS ===---
   const setLoadingState = (isLoading, message = '') => {
       if (isLoading) {
           loadingMsg.textContent = message;
@@ -818,74 +748,82 @@ document.addEventListener('DOMContentLoaded', () => {
       chat: chatScreen, 'global-chat': globalChatScreen,
       'contacts': contactsScreen, 'private-chat': privateChatScreen, admin: adminPanel
     };
-    const targetView = viewMap[view];
-    if(targetView) {
-      targetView.classList.remove('hidden');
-      if (!targetView.classList.contains('flex')) targetView.classList.add('flex');
+    if(viewMap[view]) {
+      viewMap[view].classList.remove('hidden');
+      // Use flex for all main screens for consistency
+      viewMap[view].classList.add('flex');
     }
   };
   
   const showProfileModal = (show) => {
-    if (show) { profileModal?.classList.remove('hidden'); profileModal?.classList.add('flex'); }
-    else { profileModal?.classList.add('hidden'); profileModal?.classList.remove('flex'); }
+    if (show) {
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('flex');
+    } else {
+        profileModal.classList.add('hidden');
+        profileModal.classList.remove('flex');
+    }
   };
 
   const showSupportModal = (show) => {
     if (show) {
-        if(currentUserProfile && supportName && supportEmail) {
+        if(currentUserProfile) {
             supportName.value = currentUserProfile.username;
             supportEmail.value = currentUser.email;
         }
-        supportModal?.classList.remove('hidden'); supportModal?.classList.add('flex');
+        supportModal.classList.remove('hidden');
+        supportModal.classList.add('flex');
     } else {
-        supportModal?.classList.add('hidden'); supportModal?.classList.remove('flex');
+        supportModal.classList.add('hidden');
+        supportModal.classList.remove('flex');
     }
   };
 
   const showVipModal = (show) => {
-    if (show) { vipModal?.classList.remove('hidden'); vipModal?.classList.add('flex'); }
-    else { vipModal?.classList.add('hidden'); vipModal?.classList.remove('flex'); }
+    if (show) {
+        vipModal.classList.remove('hidden');
+        vipModal.classList.add('flex');
+    } else {
+        vipModal.classList.add('hidden');
+        vipModal.classList.remove('flex');
+    }
   };
   
   const showNotificationsModal = (show) => {
-    if (show) { notificationsModal?.classList.remove('hidden'); notificationsModal?.classList.add('flex'); }
-    else { notificationsModal?.classList.add('hidden'); notificationsModal?.classList.remove('flex'); }
-  };
-
-  const showUserTicketsModal = (show) => {
-     if (show) { userTicketsModal?.classList.remove('hidden'); userTicketsModal?.classList.add('flex'); }
-     else { userTicketsModal?.classList.add('hidden'); userTicketsModal?.classList.remove('flex'); }
+    if (show) {
+        notificationsModal.classList.remove('hidden');
+        notificationsModal.classList.add('flex');
+    } else {
+        notificationsModal.classList.add('hidden');
+        notificationsModal.classList.remove('flex');
+    }
   };
   
   const populateRegions = () => {
     const states = ["Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão", "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia", "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"];
-    if (regionSelect) {
-      regionSelect.innerHTML = '<option value="">Selecione seu estado...</option>';
-      states.forEach(state => regionSelect.appendChild(new Option(state, state)));
-    }
+    regionSelect.innerHTML = '<option value="">Selecione seu estado...</option>';
+    states.forEach(state => regionSelect.appendChild(new Option(state, state)));
   };
+  populateRegions();
   
   const updateUI = (profile) => {
       if (!profile) return;
-      if (userAvatarHome) userAvatarHome.src = profile.avatar || 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
-      if (userNameHome) userNameHome.textContent = profile.username;
-      if (userRegionHome) userRegionHome.textContent = profile.region;
+      userAvatarHome.src = profile.avatar || 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
+      userNameHome.textContent = profile.username;
+      userRegionHome.textContent = profile.region;
   };
   
   const populateProfileModal = (profile) => {
       if (!profile) return;
-      if (usernameInput) usernameInput.value = profile.username || '';
-      if (genderSelect) genderSelect.value = profile.gender || '';
-      if (regionSelect) regionSelect.value = profile.region || '';
-      if (interestsInput) interestsInput.value = profile.interests || '';
-      if (avatarInput) avatarInput.value = profile.avatar || '';
+      usernameInput.value = profile.username || '';
+      genderSelect.value = profile.gender || '';
+      regionSelect.value = profile.region || '';
+      interestsInput.value = profile.interests || '';
+      avatarInput.value = profile.avatar || '';
   };
   
-  const enterGlobalChat = () => { /* Full logic here */ showView('global-chat'); };
-  const findPartner = () => { /* Full logic here */ showView('scanning'); };
-  const enterContactsScreen = () => { /* Full logic here */ showView('contacts'); };
   
-  // ---=== AUTHENTICATION & CORE APP LOGIC ===---
+  // ---=== AUTHENTICATION & PROFILE LOGIC ===---
   const handleAuthError = (error) => {
     setLoadingState(false);
     let message = 'Ocorreu um erro. Tente novamente.';
@@ -897,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'auth/account-exists-with-different-credential': message = 'Uma conta já existe com este email.'; break;
         }
     }
-    if (authErrorEl) authErrorEl.textContent = message;
+    authErrorEl.textContent = message;
     console.error("Auth Error:", error);
   };
   
@@ -912,51 +850,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const listenForTicketReplies = (user) => {
-    const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(user.uid);
-    if(ticketRepliesListener) ticketsRef.off('value', ticketRepliesListener);
-    ticketRepliesListener = ticketsRef.on('value', snapshot => {
-        const tickets = snapshot.val() || {};
-        const hasUnread = Object.values(tickets).some(ticket => ticket.user_notified === false);
-        if (ticketNotification) ticketNotification.classList.toggle('hidden', !hasUnread);
-    });
-  }
-
   const listenForNotifications = (user) => {
       const notificationsRef = db.ref(`notifications/${user.uid}`);
       if (notificationListener) notificationsRef.off('value', notificationListener);
       notificationListener = notificationsRef.on('value', snapshot => {
-          if (privateChatNotification) privateChatNotification.classList.toggle('hidden', !snapshot.exists());
+          privateChatNotification.classList.toggle('hidden', !snapshot.exists());
       });
   };
-  
-  const listenForFriendRequests = (user) => { /* Full logic here */ };
   
   const startApp = () => {
     setLoadingState(true, 'Inicializando Vazio...');
     auth.getRedirectResult().catch(handleAuthError);
+
     auth.onAuthStateChanged((user) => {
-      if (adminBtn) adminBtn.classList.add('hidden');
-      if (currentUser) db.ref().off();
+      adminBtn.classList.add('hidden'); // Hide admin button on auth change
+      if (currentUser) db.ref().off(); // Detach old listeners
+      
       if (user) {
         currentUser = user;
-        if (currentUser.uid === ADMIN_UID && adminBtn) adminBtn.classList.remove('hidden');
+        if (currentUser.uid === ADMIN_UID) {
+            adminBtn.classList.remove('hidden');
+        }
+
         const userRef = db.ref(`users/${user.uid}`);
+        
         userRef.once('value').then(async (snapshot) => {
           const profile = snapshot.val();
           const isProfileComplete = profile && profile.username && profile.gender && profile.region && profile.interests && profile.avatar;
+
           if (isProfileComplete) {
             const contactsSnapshot = await db.ref(`users/${user.uid}/contacts`).once('value');
             profile.contacts = contactsSnapshot.val() || {};
             currentUserProfile = profile;
+            
             updateUI(currentUserProfile);
             populateProfileModal(currentUserProfile);
+            
             showView('home');
+
             managePresence(user);
             listenForNotifications(user);
             listenForFriendRequests(user);
-            listenForTicketReplies(user);
           } else {
+            // Logged in, but profile is incomplete
             currentUserProfile = null;
             showProfileModal(true);
           }
@@ -964,267 +900,583 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch((error) => {
           console.error("Error fetching user profile:", error);
           setLoadingState(false);
-          showView('login');
+          showView('login'); // Fallback to login on profile fetch error
         });
       } else {
+        // No user is logged in
         currentUser = null;
         currentUserProfile = null;
-        showView('landing');
+        showView('landing'); // Show the new landing screen
         setLoadingState(false);
       }
     });
   };
 
-  // ---=== TICKET SYSTEM LOGIC ===---
-  const showTicketChatModal = (show) => {
-    if (show) { ticketChatModal?.classList.remove('hidden'); ticketChatModal?.classList.add('flex'); }
-    else { ticketChatModal?.classList.add('hidden'); ticketChatModal?.classList.remove('flex'); }
-  };
-
-  const openTicketChatModal = (ticketId, role) => {
-    const ticketRef = db.ref(`support_tickets/${ticketId}`);
-    if (currentTicketChatListener) currentTicketChatListener.ref.off('value', currentTicketChatListener.listener);
-    const listener = ticketRef.on('value', snapshot => {
-        const ticketData = snapshot.val();
-        if (!ticketData) {
-            closeTicketChatModal();
-            alert("Este chamado foi deletado ou não existe mais.");
-            return;
-        }
-        const isAdmin = role === 'admin';
-        if (ticketChatModalContent) ticketChatModalContent.style.borderColor = isAdmin ? '#22c55e' : '#22d3ee';
-        if (ticketChatModalHeader) ticketChatModalHeader.style.borderBottomColor = isAdmin ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 211, 238, 0.3)';
-        if (ticketChatSendBtn) ticketChatSendBtn.style.backgroundColor = isAdmin ? '#22c55e' : '#22d3ee';
-        if (ticketChatMessageInput) ticketChatMessageInput.style.borderColor = isAdmin ? '#22c55e' : '#22d3ee';
-        if (ticketChatModalSubject) ticketChatModalSubject.textContent = ticketData.subject;
-        if (ticketChatIdInput) ticketChatIdInput.value = ticketId;
-        const statusColors = { 'Resolvido': 'text-green-400', 'Aguardando Admin': 'text-yellow-400', 'Aguardando Retorno do Cliente': 'text-blue-400', 'Aberto': 'text-gray-400' };
-        if (ticketChatModalStatus) {
-            ticketChatModalStatus.textContent = ticketData.status;
-            ticketChatModalStatus.className = `text-sm ${statusColors[ticketData.status] || 'text-gray-400'}`;
-        }
-        if (ticketChatAdminControls) ticketChatAdminControls.classList.toggle('hidden', !isAdmin);
-        if (ticketChatUserControls) ticketChatUserControls.classList.toggle('hidden', isAdmin);
-        if (isAdmin && ticketChatStatusSelect) ticketChatStatusSelect.value = ticketData.status;
-        if (ticketChatMessagesContainer) {
-            ticketChatMessagesContainer.innerHTML = '';
-            Object.values(ticketData.messages || {}).forEach(msg => {
-                const isMyMessage = msg.senderId === (isAdmin ? 'admin' : currentUser.uid);
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `flex flex-col ${isMyMessage ? 'items-end' : 'items-start'}`;
-                msgDiv.innerHTML = `<div class="max-w-md"><p class="text-xs mb-1 ${isMyMessage ? 'text-right text-cyan-400' : 'text-left text-gray-400'}">${msg.senderName}</p><div class="px-4 py-2 rounded-lg ${isMyMessage ? 'bg-cyan-800' : 'bg-gray-700'}"><p class="text-sm break-words">${msg.text}</p></div></div>`;
-                ticketChatMessagesContainer.appendChild(msgDiv);
-            });
-            ticketChatMessagesContainer.scrollTop = ticketChatMessagesContainer.scrollHeight;
-        }
-        showTicketChatModal(true);
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => startApp())
+    .catch((error) => {
+        console.error("Error setting persistence:", error);
+        startApp();
     });
-    currentTicketChatListener = { ref: ticketRef, listener: listener };
+
+  // ---=== RANDOM CHAT (MATCHMAKING) LOGIC ===---
+  const findPartner = async () => {
+    if (!currentUser) return;
+    resetRandomChatState();
+    showView('scanning');
+    
+    const queueRef = db.ref('queue');
+    const myQueueEntryRef = queueRef.push();
+    sessionId = myQueueEntryRef.key;
+
+    myQueueEntryRef.onDisconnect().remove();
+    await myQueueEntryRef.set({ userId: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP });
+
+    const onPartnerFound = (partnerSessionId, partnerUserId) => {
+        const sortedIds = [currentUser.uid, partnerUserId].sort();
+        chatRoomId = `room_${sortedIds[0]}_${sortedIds[1]}`;
+        
+        const roomMembers = { [currentUser.uid]: true, [partnerUserId]: true };
+        roomRef = db.ref(`rooms/${chatRoomId}`);
+        roomRef.set({ members: roomMembers, createdAt: firebase.database.ServerValue.TIMESTAMP }).then(() => {
+          db.ref(`queue/${partnerSessionId}`).remove();
+          myQueueEntryRef.onDisconnect().cancel();
+          myQueueEntryRef.remove();
+          sessionId = null;
+          startChat(partnerUserId);
+        }).catch(err => { resetRandomChatState(); showView('home'); });
+    };
+
+    const queueListener = queueRef.on('value', snapshot => {
+        const otherUsers = Object.entries(snapshot.val() || {}).filter(([key, val]) => val.userId !== currentUser.uid);
+        if (otherUsers.length > 0) {
+            queueRef.off('value', queueListener);
+            const [partnerSessionId, partnerData] = otherUsers[0];
+            onPartnerFound(partnerSessionId, partnerData.userId);
+        }
+    });
   };
 
-  const closeTicketChatModal = () => {
-    if (currentTicketChatListener) {
-        currentTicketChatListener.ref.off('value', currentTicketChatListener.listener);
-        currentTicketChatListener = null;
+  const startChat = async (pId) => {
+    if (!currentUser || !chatRoomId) return;
+    partnerId = pId;
+    
+    const partnerProfileSnapshot = await db.ref(`users/${partnerId}`).once('value');
+    chatParticipantData = {}; // Reset before filling
+    chatParticipantData[currentUser.uid] = currentUserProfile;
+    chatParticipantData[partnerId] = partnerProfileSnapshot.val() || { username: 'Estranho', isPremium: false };
+    
+    myAvatarChatEl.src = currentUserProfile.avatar;
+    partnerAvatarChatEl.src = chatParticipantData[partnerId].avatar;
+    partnerNameEl.textContent = chatParticipantData[partnerId].username;
+    partnerInfoEl.textContent = `Conectado de ${chatParticipantData[partnerId].region || 'Vazio'}`;
+
+    roomRef = db.ref(`rooms/${chatRoomId}`);
+    roomRef.onDisconnect().remove();
+    showView('chat');
+    
+    messagesListener = roomRef.child('messages').on('child_added', (snapshot) => addMessageToUI(snapshot.val(), chatContainer, chatParticipantData));
+    
+    roomValueListener = roomRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (!chatRoomId || !data || !data.members || !data.members[partnerId]) {
+        if(roomRef) roomRef.off('value', roomValueListener);
+        setLoadingState(true, 'O estranho saiu do Vazio...');
+        setTimeout(() => { setLoadingState(false); resetRandomChatState(); showView('home'); }, 2000);
+      } else {
+         onlineUsersEl.textContent = Object.keys(data.members).length;
+      }
+    });
+  };
+
+  const resetRandomChatState = () => {
+    if (roomRef) {
+        if (messagesListener) roomRef.child('messages').off('child_added', messagesListener);
+        if (roomValueListener) roomRef.off('value', roomValueListener);
+        roomRef.remove().catch(e => {});
+        roomRef.onDisconnect().cancel();
     }
-    showTicketChatModal(false);
+    if (sessionId) { db.ref(`queue/${sessionId}`).remove().catch(e => {}); sessionId = null; }
+    chatRoomId = null; partnerId = null; roomRef = null; messagesListener = null; roomValueListener = null; chatParticipantData = {};
+    if(chatContainer) chatContainer.innerHTML = '';
+  };
+
+  // ---=== GLOBAL CHAT LOGIC ===---
+  const enterGlobalChat = () => {
+    if (!currentUser || !currentUserProfile) return;
+    const connectedRef = db.ref('.info/connected');
+    const userStatusRef = db.ref(`global_online/${currentUser.uid}`);
+    
+    connectedRef.on('value', (snap) => {
+        if(snap.val()) {
+            userStatusRef.set({ username: currentUserProfile.username, avatar: currentUserProfile.avatar });
+            userStatusRef.onDisconnect().remove();
+        }
+    });
+
+    globalOnlineListener = db.ref('global_online').on('value', snapshot => updateGlobalOnlineList(snapshot.val() || {}));
+    const messagesRef = db.ref('global_messages').limitToLast(50);
+    globalMessagesListener = messagesRef.on('child_added', snapshot => addGlobalMessageToUI(snapshot.val()));
+    
+    showView('global-chat');
+  };
+
+  const leaveGlobalChat = () => {
+    if (globalMessagesListener) db.ref('global_messages').off('child_added', globalMessagesListener);
+    if (globalOnlineListener) db.ref('global_online').off('value', globalOnlineListener);
+    db.ref(`global_online/${currentUser.uid}`).remove();
+    showView('home');
   };
   
-  const renderAdminTickets = (filter = 'Pendentes') => {
-    if (!adminTicketsList) return;
-    adminTicketsList.innerHTML = '';
-    const tickets = currentAdminTicketData || {};
-    const pendingStatuses = ['Aberto', 'Aguardando Admin', 'Aguardando Retorno do Cliente'];
-    const filteredTickets = Object.entries(tickets).filter(([, ticket]) => {
-        if (filter === 'Pendentes') return pendingStatuses.includes(ticket.status);
-        return ticket.status === filter;
-    });
-    if (filteredTickets.length === 0) {
-        adminTicketsList.innerHTML = `<p class="text-gray-500 text-center">Nenhum ticket '${filter}'.</p>`;
-        return;
-    }
-    const sortedTickets = filteredTickets.sort(([, a], [, b]) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
-    sortedTickets.forEach(([key, ticket]) => {
-        const ticketEl = document.createElement('div');
-        ticketEl.className = 'bg-black/50 border border-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-800/50';
-        ticketEl.dataset.ticketId = key;
-        ticketEl.innerHTML = `<p class="font-bold text-cyan-400">${ticket.subject}</p><p class="text-sm text-gray-400">De: ${ticket.name} - Status: ${ticket.status}</p>`;
-        adminTicketsList.appendChild(ticketEl);
-    });
+  const updateGlobalOnlineList = (users) => {
+      globalOnlineUsersList.innerHTML = '';
+      Object.entries(users).forEach(([uid, user]) => {
+          const isMe = uid === currentUser.uid;
+          const isFriend = currentUserProfile.contacts && currentUserProfile.contacts[uid];
+          const isPending = sentFriendRequests[uid];
+
+          const userEl = document.createElement('div');
+          userEl.className = 'flex items-center justify-between gap-3 p-2 rounded-md hover:bg-cyan-500/10';
+          let buttonHTML = '';
+          if (!isMe) {
+              if (isFriend) {
+                  buttonHTML = `<button disabled class="text-green-500"><i class="fas fa-check"></i></button>`;
+              } else if (isPending) {
+                  buttonHTML = `<button disabled class="text-yellow-500"><i class="fas fa-clock"></i></button>`;
+              } else {
+                  buttonHTML = `<button data-friend-id="${uid}" class="add-friend-btn text-cyan-400 hover:text-white"><i class="fas fa-plus"></i></button>`;
+              }
+          }
+          userEl.innerHTML = `<div class="flex items-center gap-3"><img src="${user.avatar}" class="w-8 h-8 rounded-full"><span class="text-sm font-medium text-white">${user.username} ${isMe ? '(Você)' : ''}</span></div> ${buttonHTML}`;
+          globalOnlineUsersList.appendChild(userEl);
+      });
   };
 
-  const openAdminPanel = () => {
+  // ---=== FRIEND REQUEST LOGIC ---===
+  const listenForFriendRequests = (user) => {
+      if (friendRequestListener) db.ref(`friend_requests/${user.uid}`).off('value', friendRequestListener);
+      friendRequestListener = db.ref(`friend_requests/${user.uid}`).on('value', snapshot => {
+          receivedFriendRequests = snapshot.val() || {};
+          friendRequestNotification.classList.toggle('hidden', !snapshot.exists());
+          updateNotificationsModal();
+      });
+      if(sentRequestListener) db.ref(`sent_friend_requests/${user.uid}`).off('value', sentRequestListener);
+      sentRequestListener = db.ref(`sent_friend_requests/${user.uid}`).on('value', snapshot => {
+          sentFriendRequests = snapshot.val() || {};
+      });
+  };
+
+  const updateNotificationsModal = () => {
+      notificationsList.innerHTML = '';
+      const requests = Object.entries(receivedFriendRequests);
+      if (requests.length === 0) {
+          notificationsList.innerHTML = `<p class="text-gray-500 text-center">Nenhuma nova notificação.</p>`;
+          return;
+      }
+      requests.forEach(([requesterId, data]) => {
+          const reqEl = document.createElement('div');
+          reqEl.className = 'flex items-center justify-between gap-3 p-2 rounded-md bg-gray-800/50';
+          reqEl.innerHTML = `
+              <div class="flex items-center gap-3">
+                  <img src="${data.avatar}" class="w-10 h-10 rounded-full">
+                  <p><span class="font-bold">${data.username}</span> quer ser seu amigo.</p>
+              </div>
+              <div class="flex gap-2">
+                  <button data-requester-id="${requesterId}" class="accept-request-btn p-2 bg-green-600 hover:bg-green-500 rounded-md"><i class="fas fa-check"></i></button>
+                  <button data-requester-id="${requesterId}" class="decline-request-btn p-2 bg-red-600 hover:bg-red-500 rounded-md"><i class="fas fa-times"></i></button>
+              </div>`;
+          notificationsList.appendChild(reqEl);
+      });
+  };
+
+  const sendFriendRequest = async (friendId) => {
+      if (!currentUser || !friendId || !currentUserProfile) return;
+      
+      const requestData = { from: currentUser.uid, username: currentUserProfile.username, avatar: currentUserProfile.avatar };
+      const updates = {};
+      updates[`/friend_requests/${friendId}/${currentUser.uid}`] = requestData;
+      updates[`/sent_friend_requests/${currentUser.uid}/${friendId}`] = true;
+      await db.ref().update(updates);
+  };
+  
+  const acceptFriendRequest = async (requesterId) => {
+    const updates = {};
+    updates[`/users/${currentUser.uid}/contacts/${requesterId}`] = true;
+    updates[`/users/${requesterId}/contacts/${currentUser.uid}`] = true;
+    updates[`/friend_requests/${currentUser.uid}/${requesterId}`] = null;
+    updates[`/sent_friend_requests/${requesterId}/${currentUser.uid}`] = null;
+    await db.ref().update(updates);
+    if(currentUserProfile.contacts) {
+      currentUserProfile.contacts[requesterId] = true;
+    }
+  };
+  
+  const declineFriendRequest = async (requesterId) => {
+    const updates = {};
+    updates[`/friend_requests/${currentUser.uid}/${requesterId}`] = null;
+    updates[`/sent_friend_requests/${requesterId}/${currentUser.uid}`] = null;
+    await db.ref().update(updates);
+  };
+
+  // ---=== PRIVATE CHAT & CONTACTS LOGIC ===---
+  const enterContactsScreen = () => {
+      if (!currentUser || !currentUserProfile) return;
+      showView('contacts');
+      if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
+      
+      contactsListener = db.ref(`users/${currentUser.uid}/contacts`).on('value', (contactSnapshot) => {
+          const contactIds = Object.keys(contactSnapshot.val() || {});
+          
+          if (presenceListener) db.ref('presence').off('value', presenceListener);
+          const presenceRef = db.ref('presence');
+          presenceListener = presenceRef.on('value', (presenceSnapshot) => {
+              
+              if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
+              const notificationsRef = db.ref(`notifications/${currentUser.uid}`);
+              notificationListener = notificationsRef.on('value', (notificationSnapshot) => {
+                renderContactsList(contactIds, presenceSnapshot.val() || {}, notificationSnapshot.val() || {});
+              });
+          });
+      });
+  };
+
+  const renderContactsList = async (contactIds, onlineUids, notifications) => {
+      contactsList.innerHTML = '';
+      if (contactIds.length === 0) {
+        contactsList.innerHTML = `<p class="text-gray-500 text-center mt-8">Adicione amigos para começar.</p>`;
+        return;
+      }
+      for (const friendId of contactIds) {
+          const userSnap = await db.ref(`users/${friendId}`).once('value');
+          const friendProfile = userSnap.val();
+          if (!friendProfile) continue;
+          
+          const isOnline = onlineUids[friendId] === true;
+          const hasUnread = notifications[friendId] === true;
+
+          const contactEl = document.createElement('div');
+          contactEl.className = 'flex items-center justify-between gap-4 p-3 rounded-lg hover:bg-cyan-500/20 cursor-pointer';
+          contactEl.innerHTML = `
+            <div class="flex items-center gap-4">
+                <img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full">
+                <div>
+                    <p class="font-bold text-lg">${friendProfile.username}</p>
+                    <p class="text-xs ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                ${hasUnread ? '<div class="w-3 h-3 bg-red-600 rounded-full notification-dot"></div>' : ''}
+                <i class="fas fa-comment-dots text-cyan-400"></i>
+            </div>`;
+          contactEl.addEventListener('click', () => startPrivateChat(friendId, friendProfile));
+          contactsList.appendChild(contactEl);
+      }
+  };
+
+  const leaveContactsScreen = () => {
+    if (contactsListener) db.ref(`users/${currentUser.uid}/contacts`).off('value', contactsListener);
+    if (presenceListener) db.ref('presence').off('value', presenceListener);
+    if (notificationListener) db.ref(`notifications/${currentUser.uid}`).off('value', notificationListener);
+  };
+
+  const startPrivateChat = async (friendId, friendProfile) => {
+      leaveContactsScreen();
+      currentPrivateChatFriend = { id: friendId, ...friendProfile };
+      privateChatRoomId = [currentUser.uid, friendId].sort().join('_');
+      
+      // Setup participant data for consistent message rendering
+      chatParticipantData = {};
+      chatParticipantData[currentUser.uid] = currentUserProfile;
+      chatParticipantData[friendId] = friendProfile;
+
+      privateChatPartnerAvatar.src = friendProfile.avatar;
+      privateChatPartnerName.textContent = friendProfile.username;
+
+      const friendStatusRef = db.ref(`presence/${friendId}`);
+      presenceListener = friendStatusRef.on('value', snap => {
+          privateChatPartnerStatus.textContent = snap.exists() ? 'Online' : 'Offline';
+          privateChatPartnerStatus.className = `text-xs ${snap.exists() ? 'text-green-400 neon-text-green' : 'text-red-500 neon-text-red'}`;
+      });
+      
+      db.ref(`notifications/${currentUser.uid}/${friendId}`).remove();
+      
+      privateChatContainer.innerHTML = '';
+      const messagesRef = db.ref(`private_messages/${privateChatRoomId}/messages`).limitToLast(100);
+      privateMessagesListener = messagesRef.on('child_added', snap => addMessageToUI(snap.val(), privateChatContainer, chatParticipantData));
+      showView('private-chat');
+  };
+
+  const leavePrivateChat = () => {
+      if (privateMessagesListener) db.ref(`private_messages/${privateChatRoomId}/messages`).off('child_added', privateMessagesListener);
+      if (presenceListener && currentPrivateChatFriend) db.ref(`presence/${currentPrivateChatFriend.id}`).off('value', presenceListener);
+      currentPrivateChatFriend = null; privateChatRoomId = null;
+  };
+
+  const sendPrivateMessage = (text) => {
+      if (text.trim() === '' || !privateChatRoomId || !currentPrivateChatFriend) return;
+      const messageData = { 
+          senderId: currentUser.uid, 
+          text: text, 
+          isPremium: currentUserProfile.isPremium === true,
+          timestamp: firebase.database.ServerValue.TIMESTAMP 
+      };
+      db.ref(`private_messages/${privateChatRoomId}/messages`).push(messageData);
+      db.ref(`notifications/${currentPrivateChatFriend.id}/${currentUser.uid}`).set(true);
+  };
+  
+  const sendMessage = (text) => {
+    if (text.trim() === '' || !chatRoomId || !roomRef || !currentUser) return;
+    const messageData = {
+        senderId: currentUser.uid,
+        text: text,
+        isPremium: currentUserProfile.isPremium === true,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+    roomRef.child('messages').push(messageData);
+  };
+  
+  const addMessageToUI = (message, container, participants) => {
+      if (!message || !currentUser || !container || !participants) return;
+      const senderProfile = participants[message.senderId] || { username: 'Estranho', isPremium: message.isPremium };
+      const isMe = message.senderId === currentUser.uid;
+      const isVip = senderProfile.isPremium === true;
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `flex flex-col fade-in ${isMe ? 'items-end' : 'items-start'}`;
+
+      const usernameHTML = isVip 
+          ? `<p class="text-xs mb-1 vip-name">${senderProfile.username} [VIP]</p>`
+          : `<p class="text-xs mb-1 text-cyan-400">${senderProfile.username}</p>`;
+
+      const bubbleClasses = isVip 
+          ? 'vip-msg px-4 py-2 rounded-lg'
+          : `px-4 py-2 rounded-lg ${isMe ? 'bg-cyan-800' : 'bg-gray-700'}`;
+          
+      messageDiv.innerHTML = `
+          <div class="max-w-md">
+              ${!isMe ? usernameHTML : ''}
+              <div class="${bubbleClasses}">
+                  <p class="text-sm break-words">${message.text}</p>
+              </div>
+          </div>`;
+      container.appendChild(messageDiv);
+      container.scrollTop = container.scrollHeight;
+  };
+
+  const addGlobalMessageToUI = (message) => {
+      if (!message || !currentUser) return;
+      const isMe = message.senderId === currentUser.uid;
+      const isVip = message.isPremium === true;
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `flex gap-3 my-2 ${isMe ? 'justify-end' : 'justify-start'}`;
+      let contentHTML = message.type === 'audio' ? `<audio controls src="${message.text}" class="w-64"></audio>` : `<p class="text-sm break-words">${message.text}</p>`;
+      
+      const usernameHTML = isVip
+          ? `<p class="text-xs mb-1 vip-name">${message.username} [VIP]</p>`
+          : `<p class="text-xs mb-1 text-cyan-400">${message.username}</p>`;
+
+      const bubbleClasses = isVip
+          ? 'vip-msg px-4 py-2 rounded-lg'
+          : `px-4 py-2 rounded-lg ${isMe ? 'bg-green-800/50 border border-green-500/50 neon-border-green' : 'bg-gray-700'}`;
+
+      messageDiv.innerHTML = `
+        ${!isMe ? `<img src="${message.avatar}" class="w-8 h-8 rounded-full self-end">` : ''}
+        <div class="max-w-md">
+            <div class="${isMe ? 'text-right' : 'text-left'}">${usernameHTML}</div>
+            <div class="${bubbleClasses}">${contentHTML}</div>
+        </div>
+        ${isMe ? `<img src="${message.avatar}" class="w-8 h-8 rounded-full self-end">` : ''}`;
+      globalChatContainer.appendChild(messageDiv);
+      globalChatContainer.scrollTop = globalChatContainer.scrollHeight;
+  };
+
+  const sendGlobalMessage = (text, type = 'text') => {
+      if ((!text || text.trim() === '') || !currentUserProfile) return;
+      const messageData = {
+          senderId: currentUser.uid,
+          username: currentUserProfile.username,
+          avatar: currentUserProfile.avatar,
+          isPremium: currentUserProfile.isPremium === true,
+          text: text,
+          type: type,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+      };
+      db.ref('global_messages').push(messageData);
+  };
+
+  // ---=== ADMIN PANEL LOGIC ===---
+  const enterAdminPanel = () => {
     showView('admin');
     const ticketsRef = db.ref('support_tickets');
     if (adminTicketsListener) ticketsRef.off('value', adminTicketsListener);
+
     adminTicketsListener = ticketsRef.on('value', snapshot => {
-        currentAdminTicketData = snapshot.val() || {};
-        const currentFilter = document.querySelector('.admin-filter-btn.active')?.dataset.filter || 'Pendentes';
-        renderAdminTickets(currentFilter);
+        const tickets = snapshot.val() || {};
+        adminTicketsList.innerHTML = ''; // Clear list before rendering
+        if (Object.keys(tickets).length === 0) {
+            adminTicketsList.innerHTML = `<p class="text-gray-500 text-center">Nenhum ticket de suporte encontrado.</p>`;
+            return;
+        }
+        
+        // Sort tickets by timestamp, newest first
+        const sortedTickets = Object.entries(tickets).sort(([, a], [, b]) => b.timestamp - a.timestamp);
+
+        sortedTickets.forEach(([key, ticket]) => {
+            const date = new Date(ticket.timestamp).toLocaleString('pt-BR');
+            const ticketEl = document.createElement('div');
+            ticketEl.className = 'bg-black/50 border border-gray-700 p-4 rounded-lg';
+            ticketEl.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-lg font-bold text-cyan-400">${ticket.subject}</p>
+                        <p class="text-sm text-gray-400">De: ${ticket.name} (${ticket.email})</p>
+                        <p class="text-xs text-gray-500">Data: ${date}</p>
+                    </div>
+                    <span class="text-xs font-bold py-1 px-2 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500">NOVO</span>
+                </div>
+                <p class="mt-3 pt-3 border-t border-gray-700/50 text-gray-300">${ticket.description}</p>
+            `;
+            adminTicketsList.appendChild(ticketEl);
+        });
     });
   };
 
   const leaveAdminPanel = () => {
-    if (adminTicketsListener) db.ref('support_tickets').off('value', adminTicketsListener);
-    showView('home');
-  };
-
-  const enterMyTicketsView = () => {
-    if(!currentUser || !userTicketsList) return;
-    showUserTicketsModal(true);
-    const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(currentUser.uid);
-    if (userTicketsListener) ticketsRef.off('value', userTicketsListener);
-    userTicketsListener = ticketsRef.on('value', snapshot => {
-        const tickets = snapshot.val() || {};
-        userTicketsList.innerHTML = '';
-        if (Object.keys(tickets).length === 0) {
-            userTicketsList.innerHTML = `<p class="text-gray-500 text-center">Você não enviou nenhum chamado.</p>`;
-            return;
-        }
-        const sortedTickets = Object.entries(tickets).sort(([, a], [, b]) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
-        sortedTickets.forEach(([key, ticket]) => {
-            const ticketEl = document.createElement('div');
-            ticketEl.className = 'bg-gray-800/50 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50';
-            ticketEl.dataset.ticketId = key;
-            const hasUnread = ticket.user_notified === false ? '<span class="text-red-500 ml-2">(Nova Resposta)</span>' : '';
-            ticketEl.innerHTML = `<p class="font-bold text-cyan-400">${ticket.subject} ${hasUnread}</p><p class="text-xs">Status: ${ticket.status}</p>`;
-            userTicketsList.appendChild(ticketEl);
-        });
-        const updates = {};
-        Object.entries(tickets).forEach(([key, ticket]) => {
-            if(ticket.user_notified === false) updates[`/support_tickets/${key}/user_notified`] = true;
-        });
-        if (Object.keys(updates).length > 0) db.ref().update(updates);
-    });
-  };
-
-  const leaveMyTicketsView = () => {
-      if(currentUser) {
-          const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(currentUser.uid);
-          if (userTicketsListener) ticketsRef.off('value', userTicketsListener);
-      }
-      showUserTicketsModal(false);
+      const ticketsRef = db.ref('support_tickets');
+      if (adminTicketsListener) ticketsRef.off('value', adminTicketsListener);
+      showView('home');
   };
   
-  // ---=== EVENT LISTENERS (Error-Proofed & Prioritized) ===---
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(startApp).catch(startApp);
-  populateRegions();
+  const uploadAudio = (blob) => { /* Unchanged */ };
+  const toggleAudioRecording = async () => { /* Unchanged */ };
 
-  // Prioritized Home Screen Navigation
-  if (globalChatCard) { globalChatCard.addEventListener('click', enterGlobalChat); }
-  if (matchBtn) { matchBtn.addEventListener('click', () => { if (currentUserProfile) findPartner(); }); }
-  if (privateChatCard) { privateChatCard.addEventListener('click', enterContactsScreen); }
 
-  // Landing & Auth
-  if (enterVoidBtn) { enterVoidBtn.addEventListener('click', () => showView('login')); }
-  if (loginForm) { loginForm.addEventListener('submit', (e) => e.preventDefault()); }
-  if (loginBtn) { loginBtn.addEventListener('click', () => auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError)); }
-  if (signupBtn) { signupBtn.addEventListener('click', () => auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError)); }
-  if (googleSigninBtn) { googleSigninBtn.addEventListener('click', () => auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError)); }
+  // ---=== EVENT LISTENERS ===---
+  enterVoidBtn.addEventListener('click', () => showView('login'));
+
+  loginForm.addEventListener('submit', (e) => e.preventDefault());
+  loginBtn.addEventListener('click', () => { setLoadingState(true, 'Entrando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  googleSigninBtn.addEventListener('click', () => { setLoadingState(true, 'Aguardando Google...'); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
   
-  if (profileForm) {
-    profileForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim() };
-      if (!Object.values(profileData).every(Boolean)) { if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
-      if(fullProfileErrorEl) fullProfileErrorEl.textContent = '';
-      saveFullProfileBtn.disabled = true;
-      saveFullProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>SALVANDO...';
-      db.ref(`users/${currentUser.uid}`).update(profileData)
-        .then(() => { location.reload(); })
-        .catch((err) => {
-            console.error("Erro ao salvar perfil:", err);
-            if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'Erro ao salvar.';
-            saveFullProfileBtn.disabled = false;
-            saveFullProfileBtn.innerHTML = 'SALVAR NO VAZIO';
-        });
-    });
-  }
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim() };
+    if (!Object.values(profileData).every(Boolean)) { fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
+    fullProfileErrorEl.textContent = '';
+    
+    saveFullProfileBtn.disabled = true;
+    saveFullProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>SALVANDO...';
+    
+    db.ref(`users/${currentUser.uid}`).update(profileData)
+      .then(async () => {
+          const wasFirstTimeSetup = !currentUserProfile;
+          const contactsSnapshot = await db.ref(`users/${currentUser.uid}/contacts`).once('value');
+          // Important: Preserve existing premium status when updating profile
+          const isPremium = currentUserProfile ? currentUserProfile.isPremium : false;
+          currentUserProfile = { ...profileData, isPremium, contacts: contactsSnapshot.val() || {} };
 
-  // Modals & General UI
-  if (userProfileFooter) { userProfileFooter.addEventListener('click', () => showProfileModal(true)); }
-  if (notificationsBtn) { notificationsBtn.addEventListener('click', () => showNotificationsModal(true)); }
-  if (notificationsCloseBtn) { notificationsCloseBtn.addEventListener('click', () => showNotificationsModal(false)); }
-  if (vipModalCloseBtn) { vipModalCloseBtn.addEventListener('click', () => showVipModal(false)); }
-  if (vipModal) { vipModal.addEventListener('click', (e) => { if (e.target === vipModal) showVipModal(false); }); }
+          updateUI(currentUserProfile);
+          populateProfileModal(currentUserProfile);
+          
+          showProfileModal(false);
 
-  // Support & Tickets System
-  if (supportFab) { supportFab.addEventListener('click', () => showSupportModal(true)); }
-  if (supportModalCloseBtn) { supportModalCloseBtn.addEventListener('click', () => showSupportModal(false)); }
-  if (supportForm) {
-    supportForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const messageData = { text: e.target.elements['support-description'].value, senderId: currentUser.uid, senderName: currentUserProfile.username, timestamp: firebase.database.ServerValue.TIMESTAMP };
-      const ticketData = { name: e.target.elements['support-name'].value, email: e.target.elements['support-email'].value, subject: e.target.elements['support-subject'].value, userId: currentUser.uid, status: 'Aguardando Admin', user_notified: true, createdAt: firebase.database.ServerValue.TIMESTAMP, lastUpdated: firebase.database.ServerValue.TIMESTAMP };
-      const newTicketRef = db.ref('support_tickets').push(ticketData);
-      newTicketRef.child('messages').push(messageData)
-        .then(() => {
-            alert('Chamado enviado com sucesso!');
-            supportForm.reset();
-            showSupportModal(false);
-        }).catch(err => alert('Ocorreu um erro.'));
-    });
-  }
+          if (wasFirstTimeSetup) {
+            showView('home');
+            managePresence(currentUser);
+            listenForNotifications(currentUser);
+            listenForFriendRequests(currentUser);
+          }
+      })
+      .catch((err) => {
+          console.error("Erro ao salvar perfil:", err);
+          fullProfileErrorEl.textContent = 'Erro ao salvar.';
+      })
+      .finally(() => {
+          saveFullProfileBtn.disabled = false;
+          saveFullProfileBtn.innerHTML = 'SALVAR NO VAZIO';
+      });
+  });
 
-  if (myTicketsBtn) { myTicketsBtn.addEventListener('click', enterMyTicketsView); }
-  if (userTicketsCloseBtn) { userTicketsCloseBtn.addEventListener('click', leaveMyTicketsView); }
-  if (userTicketsList) {
-    userTicketsList.addEventListener('click', (e) => {
-      const ticketEl = e.target.closest('[data-ticket-id]');
-      if (ticketEl) openTicketChatModal(ticketEl.dataset.ticketId, 'user');
-    });
-  }
+  userProfileFooter.addEventListener('click', () => showProfileModal(true));
+  
+  randomChatExitBtn.addEventListener('click', () => { resetRandomChatState(); showView('home'); });
+  
+  matchBtn.addEventListener('click', async () => {
+      if (!currentUserProfile) return;
+      findPartner();
+  });
 
-  // Admin Panel
-  if (adminBtn) { adminBtn.addEventListener('click', openAdminPanel); }
-  if (adminPanelBackBtn) { adminPanelBackBtn.addEventListener('click', leaveAdminPanel); }
-  if (adminFilters) {
-    adminFilters.addEventListener('click', (e) => {
-        const target = e.target;
-        if(target.classList.contains('admin-filter-btn')) {
-            document.querySelectorAll('.admin-filter-btn').forEach(btn => btn.classList.remove('active'));
-            target.classList.add('active');
-            renderAdminTickets(target.dataset.filter);
-        }
-    });
-  }
-  if (adminTicketsList) {
-    adminTicketsList.addEventListener('click', (e) => {
-      const ticketEl = e.target.closest('[data-ticket-id]');
-      if (ticketEl) openTicketChatModal(ticketEl.dataset.ticketId, 'admin');
-    });
-  }
+  nextBtn.addEventListener('click', () => { resetRandomChatState(); findPartner(); });
+  messageForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(messageInput.value); messageInput.value = ''; });
 
-  // Ticket Chat Modal
-  if (ticketChatModalCloseBtn) { ticketChatModalCloseBtn.addEventListener('click', closeTicketChatModal); }
-  if (ticketChatForm) {
-    ticketChatForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const ticketId = ticketChatIdInput.value;
-      const text = ticketChatMessageInput.value.trim();
-      if (!ticketId || !text) return;
-      const isAdmin = currentUser.uid === ADMIN_UID;
-      const messageData = { text: text, senderId: isAdmin ? 'admin' : currentUser.uid, senderName: isAdmin ? 'Admin' : currentUserProfile.username, timestamp: firebase.database.ServerValue.TIMESTAMP };
-      const updates = { status: isAdmin ? 'Aguardando Retorno do Cliente' : 'Aguardando Admin', lastUpdated: firebase.database.ServerValue.TIMESTAMP, user_notified: isAdmin ? false : true };
-      db.ref(`support_tickets/${ticketId}/messages`).push(messageData);
-      db.ref(`support_tickets/${ticketId}`).update(updates);
-      ticketChatMessageInput.value = '';
-    });
-  }
-  if (ticketChatStatusSelect) {
-    ticketChatStatusSelect.addEventListener('change', (e) => {
-      const ticketId = ticketChatIdInput.value;
-      if (ticketId) db.ref(`support_tickets/${ticketId}/status`).set(e.target.value);
-    });
-  }
-  if (ticketChatDeleteBtn) {
-    ticketChatDeleteBtn.addEventListener('click', () => {
-      const ticketId = ticketChatIdInput.value;
-      if (ticketId && confirm("Tem certeza que deseja apagar este chamado permanentemente?")) {
-          db.ref(`support_tickets/${ticketId}`).remove().then(closeTicketChatModal);
-      }
-    });
-  }
+  globalChatCard.addEventListener('click', enterGlobalChat);
+  globalChatBackBtn.addEventListener('click', leaveGlobalChat);
+  globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); sendGlobalMessage(globalMessageInput.value, 'text'); globalMessageInput.value = ''; });
+  globalOnlineUsersList.addEventListener('click', (e) => {
+      const button = e.target.closest('.add-friend-btn');
+      if (button && !button.disabled) sendFriendRequest(button.dataset.friendId);
+  });
+
+  privateChatCard.addEventListener('click', enterContactsScreen);
+  contactsBackBtn.addEventListener('click', () => { leaveContactsScreen(); showView('home'); });
+  privateChatBackBtn.addEventListener('click', () => { leavePrivateChat(); enterContactsScreen(); });
+  privateMessageForm.addEventListener('submit', (e) => { e.preventDefault(); sendPrivateMessage(privateMessageInput.value); privateMessageInput.value = ''; });
+
+  notificationsBtn.addEventListener('click', () => showNotificationsModal(true));
+  notificationsCloseBtn.addEventListener('click', () => showNotificationsModal(false));
+  notificationsList.addEventListener('click', e => {
+      const acceptBtn = e.target.closest('.accept-request-btn');
+      if(acceptBtn) acceptFriendRequest(acceptBtn.dataset.requesterId);
+      const declineBtn = e.target.closest('.decline-request-btn');
+      if(declineBtn) declineFriendRequest(declineBtn.dataset.requesterId);
+  });
+  
+  // VIP Modal Listeners are paused
+  vipModalCloseBtn.addEventListener('click', () => showVipModal(false));
+  vipModal.addEventListener('click', (e) => {
+    if (e.target === vipModal) {
+      showVipModal(false);
+    }
+  });
+
+  // Support Listeners
+  supportFab.addEventListener('click', () => showSupportModal(true));
+  supportModalCloseBtn.addEventListener('click', () => showSupportModal(false));
+  supportForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ticketData = {
+        name: e.target.elements['support-name'].value,
+        email: e.target.elements['support-email'].value,
+        subject: e.target.elements['support-subject'].value,
+        description: e.target.elements['support-description'].value,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        userId: currentUser ? currentUser.uid : 'anonymous'
+    };
+
+    db.ref('support_tickets').push(ticketData)
+      .then(() => {
+          alert('Chamado enviado com sucesso! Nossa equipe analisará.');
+          supportForm.reset();
+          showSupportModal(false);
+      })
+      .catch(err => {
+          console.error("Support ticket error:", err);
+          alert('Ocorreu um erro ao enviar seu chamado. Tente novamente.');
+      });
+  });
+
+  // Admin Listeners
+  adminBtn.addEventListener('click', enterAdminPanel);
+  adminPanelBackBtn.addEventListener('click', leaveAdminPanel);
+
+  window.addEventListener('beforeunload', () => {
+    if(currentUser){
+      if (sessionId) db.ref(`queue/${sessionId}`).remove();
+      if (roomRef) roomRef.remove();
+    }
+  });
 });
 </script>
 
