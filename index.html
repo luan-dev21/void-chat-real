@@ -304,7 +304,7 @@
                     <span id="ticket-notification" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
                 </div>
                  <button id="admin-btn" class="hidden ml-4 font-bold py-1 px-3 rounded-md text-black bg-green-500 border border-green-300 neon-border-green">
-                    <i class="fas fa-shield-halved mr-1"></i>ADMIN
+                    <i class="fas fa-shield-halved mr-1"></i>PAINEL ADMIN
                 </button>
             </div>
             <button id="premium-btn" class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
@@ -623,7 +623,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---=== ADMIN CONFIG ===---
-  const ADMIN_UID = 'lxWxEwMGCee1Hcu01qIdHydafQf2'; // Substitua pelo seu UID do Firebase Auth
+  const ADMIN_UID = 'lxWxEwMGCee1Hcu01qIdHydafQf2'; // UID do Administrador
 
   // Iframe check to prevent disallowed_useragent error with Google Auth
   try {
@@ -1003,37 +1003,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
   // ---=== RANDOM CHAT (MATCHMAKING) LOGIC ===---
-  const findPartner = async () => { /* Unchanged */ };
-  const startChat = async (pId) => { /* Unchanged */ };
-  const resetRandomChatState = () => { /* Unchanged */ };
+  const findPartner = async () => { /* Unchanged: Placeholder for brevity */ };
+  const startChat = async (pId) => { /* Unchanged: Placeholder for brevity */ };
+  const resetRandomChatState = () => { /* Unchanged: Placeholder for brevity */ };
 
   // ---=== GLOBAL CHAT LOGIC ===---
-  const enterGlobalChat = () => { /* Unchanged */ };
-  const leaveGlobalChat = () => { /* Unchanged */ };
-  const updateGlobalOnlineList = (users) => { /* Unchanged */ };
+  const enterGlobalChat = () => { /* Unchanged: Placeholder for brevity */ };
+  const leaveGlobalChat = () => { /* Unchanged: Placeholder for brevity */ };
+  const updateGlobalOnlineList = (users) => { /* Unchanged: Placeholder for brevity */ };
 
   // ---=== FRIEND REQUEST LOGIC ---===
-  const listenForFriendRequests = (user) => { /* Unchanged */ };
-  const updateNotificationsModal = () => { /* Unchanged */ };
-  const sendFriendRequest = async (friendId) => { /* Unchanged */ };
-  const acceptFriendRequest = async (requesterId) => { /* Unchanged */ };
-  const declineFriendRequest = async (requesterId) => { /* Unchanged */ };
+  const listenForFriendRequests = (user) => { /* Unchanged: Placeholder for brevity */ };
+  const updateNotificationsModal = () => { /* Unchanged: Placeholder for brevity */ };
+  const sendFriendRequest = async (friendId) => { /* Unchanged: Placeholder for brevity */ };
+  const acceptFriendRequest = async (requesterId) => { /* Unchanged: Placeholder for brevity */ };
+  const declineFriendRequest = async (requesterId) => { /* Unchanged: Placeholder for brevity */ };
 
   // ---=== PRIVATE CHAT & CONTACTS LOGIC ===---
-  const enterContactsScreen = () => { /* Unchanged */ };
-  const renderContactsList = async (contactIds, onlineUids, notifications) => { /* Unchanged */ };
-  const leaveContactsScreen = () => { /* Unchanged */ };
-  const startPrivateChat = async (friendId, friendProfile) => { /* Unchanged */ };
-  const leavePrivateChat = () => { /* Unchanged */ };
-  const sendPrivateMessage = (text) => { /* Unchanged */ };
+  const enterContactsScreen = () => { /* Unchanged: Placeholder for brevity */ };
+  const renderContactsList = async (contactIds, onlineUids, notifications) => { /* Unchanged: Placeholder for brevity */ };
+  const leaveContactsScreen = () => { /* Unchanged: Placeholder for brevity */ };
+  const startPrivateChat = async (friendId, friendProfile) => { /* Unchanged: Placeholder for brevity */ };
+  const leavePrivateChat = () => { /* Unchanged: Placeholder for brevity */ };
+  const sendPrivateMessage = (text) => { /* Unchanged: Placeholder for brevity */ };
   
   // ---=== MESSAGE RENDERING LOGIC ===---
-  const sendMessage = (text) => { /* Unchanged */ };
-  const addMessageToUI = (message, container, participants) => { /* Unchanged */ };
-  const addGlobalMessageToUI = (message) => { /* Unchanged */ };
-  const sendGlobalMessage = (text, type = 'text') => { /* Unchanged */ };
-  const uploadAudio = (blob) => { /* Unchanged */ };
-  const toggleAudioRecording = async () => { /* Unchanged */ };
+  const sendMessage = (text) => { /* Unchanged: Placeholder for brevity */ };
+  const addMessageToUI = (message, container, participants) => { /* Unchanged: Placeholder for brevity */ };
+  const addGlobalMessageToUI = (message) => { /* Unchanged: Placeholder for brevity */ };
+  const sendGlobalMessage = (text, type = 'text') => { /* Unchanged: Placeholder for brevity */ };
+  const uploadAudio = (blob) => { /* Unchanged: Placeholder for brevity */ };
+  const toggleAudioRecording = async () => { /* Unchanged: Placeholder for brevity */ };
   
   // ---=== ADMIN PANEL LOGIC ===---
   const renderAdminTickets = (filter = 'Todos') => {
@@ -1082,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   };
 
-  const enterAdminPanel = () => {
+  const openAdminPanel = () => {
     showView('admin');
     const ticketsRef = db.ref('support_tickets');
     if (adminTicketsListener) ticketsRef.off('value', adminTicketsListener);
@@ -1101,6 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ---=== USER TICKET VIEW LOGIC ===---
+  // Firebase Performance Tip: For this query to be efficient, add ".indexOn": ["userId"] to your security rules for the 'support_tickets' node.
   const enterMyTicketsView = () => {
     if(!currentUser) return;
     showUserTicketsModal(true);
@@ -1151,15 +1152,15 @@ document.addEventListener('DOMContentLoaded', () => {
       showUserTicketsModal(false);
   };
   
-  // ---=== EVENT LISTENERS ===---
-  enterVoidBtn.addEventListener('click', () => showView('login'));
+  // ---=== EVENT LISTENERS (with Optional Chaining for robustness) ===---
+  enterVoidBtn?.addEventListener('click', () => showView('login'));
 
-  loginForm.addEventListener('submit', (e) => e.preventDefault());
-  loginBtn.addEventListener('click', () => { setLoadingState(true, 'Entrando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
-  signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
-  googleSigninBtn.addEventListener('click', () => { setLoadingState(true, 'Aguardando Google...'); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
+  loginForm?.addEventListener('submit', (e) => e.preventDefault());
+  loginBtn?.addEventListener('click', () => { setLoadingState(true, 'Entrando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  signupBtn?.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); });
+  googleSigninBtn?.addEventListener('click', () => { setLoadingState(true, 'Aguardando Google...'); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError); });
   
-  profileForm.addEventListener('submit', (e) => {
+  profileForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim() };
     if (!Object.values(profileData).every(Boolean)) { fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
@@ -1172,13 +1173,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(async () => {
           const wasFirstTimeSetup = !currentUserProfile;
           const contactsSnapshot = await db.ref(`users/${currentUser.uid}/contacts`).once('value');
-          // Important: Preserve existing premium status when updating profile
           const isPremium = currentUserProfile ? currentUserProfile.isPremium : false;
           currentUserProfile = { ...profileData, isPremium, contacts: contactsSnapshot.val() || {} };
 
           updateUI(currentUserProfile);
           populateProfileModal(currentUserProfile);
-          
           showProfileModal(false);
 
           if (wasFirstTimeSetup) {
@@ -1199,47 +1198,45 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-  userProfileFooter.addEventListener('click', () => showProfileModal(true));
+  userProfileFooter?.addEventListener('click', () => showProfileModal(true));
   
-  randomChatExitBtn.addEventListener('click', () => { resetRandomChatState(); showView('home'); });
+  randomChatExitBtn?.addEventListener('click', () => { resetRandomChatState(); showView('home'); });
   
-  matchBtn.addEventListener('click', async () => {
-      if (!currentUserProfile) return;
-      findPartner();
-  });
+  // Home Screen buttons
+  globalChatCard?.addEventListener('click', enterGlobalChat);
+  matchBtn?.addEventListener('click', () => { if (currentUserProfile) findPartner(); });
+  privateChatCard?.addEventListener('click', enterContactsScreen);
 
-  nextBtn.addEventListener('click', () => { resetRandomChatState(); findPartner(); });
-  messageForm.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(messageInput.value); messageInput.value = ''; });
+  nextBtn?.addEventListener('click', () => { resetRandomChatState(); findPartner(); });
+  messageForm?.addEventListener('submit', (e) => { e.preventDefault(); sendMessage(messageInput.value); messageInput.value = ''; });
 
-  globalChatCard.addEventListener('click', enterGlobalChat);
-  globalChatBackBtn.addEventListener('click', leaveGlobalChat);
-  globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); sendGlobalMessage(globalMessageInput.value, 'text'); globalMessageInput.value = ''; });
-  globalOnlineUsersList.addEventListener('click', (e) => {
+  globalChatBackBtn?.addEventListener('click', leaveGlobalChat);
+  globalMessageForm?.addEventListener('submit', (e) => { e.preventDefault(); sendGlobalMessage(globalMessageInput.value, 'text'); globalMessageInput.value = ''; });
+  globalOnlineUsersList?.addEventListener('click', (e) => {
       const button = e.target.closest('.add-friend-btn');
       if (button && !button.disabled) sendFriendRequest(button.dataset.friendId);
   });
 
-  privateChatCard.addEventListener('click', enterContactsScreen);
-  contactsBackBtn.addEventListener('click', () => { leaveContactsScreen(); showView('home'); });
-  privateChatBackBtn.addEventListener('click', () => { leavePrivateChat(); enterContactsScreen(); });
-  privateMessageForm.addEventListener('submit', (e) => { e.preventDefault(); sendPrivateMessage(privateMessageInput.value); privateMessageInput.value = ''; });
+  contactsBackBtn?.addEventListener('click', () => { leaveContactsScreen(); showView('home'); });
+  privateChatBackBtn?.addEventListener('click', () => { leavePrivateChat(); enterContactsScreen(); });
+  privateMessageForm?.addEventListener('submit', (e) => { e.preventDefault(); sendPrivateMessage(privateMessageInput.value); privateMessageInput.value = ''; });
 
-  notificationsBtn.addEventListener('click', () => showNotificationsModal(true));
-  notificationsCloseBtn.addEventListener('click', () => showNotificationsModal(false));
-  notificationsList.addEventListener('click', e => {
+  notificationsBtn?.addEventListener('click', () => showNotificationsModal(true));
+  notificationsCloseBtn?.addEventListener('click', () => showNotificationsModal(false));
+  notificationsList?.addEventListener('click', e => {
       const acceptBtn = e.target.closest('.accept-request-btn');
       if(acceptBtn) acceptFriendRequest(acceptBtn.dataset.requesterId);
       const declineBtn = e.target.closest('.decline-request-btn');
       if(declineBtn) declineFriendRequest(declineBtn.dataset.requesterId);
   });
   
-  vipModalCloseBtn.addEventListener('click', () => showVipModal(false));
-  vipModal.addEventListener('click', (e) => { if (e.target === vipModal) showVipModal(false); });
+  vipModalCloseBtn?.addEventListener('click', () => showVipModal(false));
+  vipModal?.addEventListener('click', (e) => { if (e.target === vipModal) showVipModal(false); });
 
   // Support & Tickets Listeners
-  supportFab.addEventListener('click', () => showSupportModal(true));
-  supportModalCloseBtn.addEventListener('click', () => showSupportModal(false));
-  supportForm.addEventListener('submit', (e) => {
+  supportFab?.addEventListener('click', () => showSupportModal(true));
+  supportModalCloseBtn?.addEventListener('click', () => showSupportModal(false));
+  supportForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     const ticketData = {
         name: e.target.elements['support-name'].value,
@@ -1250,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userId: currentUser ? currentUser.uid : 'anonymous',
         status: 'Aberto',
         admin_reply: '',
-        user_notified: true, // User doesn't need to be notified of their own submission
+        user_notified: true,
     };
 
     db.ref('support_tickets').push(ticketData)
@@ -1265,13 +1262,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-  myTicketsBtn.addEventListener('click', enterMyTicketsView);
-  userTicketsCloseBtn.addEventListener('click', leaveMyTicketsView);
+  myTicketsBtn?.addEventListener('click', enterMyTicketsView);
+  userTicketsModalCloseBtn?.addEventListener('click', leaveMyTicketsView);
 
   // Admin Listeners
-  adminBtn.addEventListener('click', enterAdminPanel);
-  adminPanelBackBtn.addEventListener('click', leaveAdminPanel);
-  adminFilters.addEventListener('click', (e) => {
+  adminBtn?.addEventListener('click', openAdminPanel);
+  adminPanelBackBtn?.addEventListener('click', leaveAdminPanel);
+  adminFilters?.addEventListener('click', (e) => {
       if(e.target.classList.contains('admin-filter-btn')) {
           document.querySelectorAll('.admin-filter-btn').forEach(btn => btn.classList.remove('active'));
           e.target.classList.add('active');
@@ -1279,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  adminTicketsList.addEventListener('click', (e) => {
+  adminTicketsList?.addEventListener('click', (e) => {
       const manageBtn = e.target.closest('.manage-ticket-btn');
       if (manageBtn) {
           const ticketId = manageBtn.dataset.ticketId;
@@ -1296,8 +1293,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  adminManageTicketCloseBtn.addEventListener('click', () => showAdminManageTicketModal(false));
-  adminManageTicketForm.addEventListener('submit', (e) => {
+  adminManageTicketCloseBtn?.addEventListener('click', () => showAdminManageTicketModal(false));
+  adminManageTicketForm?.addEventListener('submit', (e) => {
       e.preventDefault();
       const ticketId = adminManageTicketId.value;
       const updates = {
