@@ -173,7 +173,7 @@
   <!-- Landing Screen -->
   <div id="landing-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 relative z-10">
       <div class="text-center space-y-8">
-          <h1 class="text-7xl md:text-9xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
+          <h1 class="text-6xl md:text-9xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
           <button id="enter-void-btn" class="text-2xl font-bold py-4 px-10 rounded-md text-black bg-cyan-400 border-2 border-cyan-200 neon-pulse-cyan transition-all uppercase">
               [ Entrar no Vazio ]
           </button>
@@ -183,7 +183,7 @@
 
   <!-- Login Screen -->
   <div id="login-screen" class="hidden w-full h-full flex items-center justify-center p-4 relative z-10">
-    <div class="w-full max-w-md bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 neon-border-cyan space-y-6">
+    <div class="w-full max-w-md bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 md:p-8 neon-border-cyan space-y-4 md:space-y-6">
       <div class="text-center">
         <h1 class="text-4xl font-black text-white neon-text-green">VOID CHAT</h1>
         <p class="text-cyan-400 neon-text-cyan text-sm">Acesse o Vazio.</p>
@@ -198,7 +198,7 @@
           <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
         </div>
         <p id="auth-error" class="text-red-500 text-xs text-center h-4"></p>
-        <div class="space-y-2 pt-4">
+        <div class="space-y-2">
             <button type="submit" id="login-btn" class="w-full font-bold py-2 px-4 rounded-md text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">Entrar</button>
             <button type="button" id="signup-btn" class="w-full font-bold py-2 px-4 rounded-md text-cyan-400 border-2 border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Criar Conta</button>
         </div>
@@ -208,9 +208,9 @@
 
   <!-- Profile Creation Modal -->
   <div id="profile-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-      <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan space-y-6">
+      <div class="w-11/12 max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 md:p-8 neon-border-cyan space-y-6">
           <div class="text-center">
-              <h1 class="text-3xl font-bold text-white neon-text-green">COMPLETE SEU PERFIL</h1>
+              <h1 class="text-2xl md:text-3xl font-bold text-white neon-text-green">COMPLETE SEU PERFIL</h1>
               <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade para mergulhar no Vazio.</p>
           </div>
           <form id="profile-form" class="space-y-4">
@@ -253,7 +253,7 @@
   <!-- Home Screen -->
     <div id="home-screen" class="hidden w-full h-full flex flex-col justify-center items-center p-4 relative z-10">
         <!-- Hall of Fame -->
-        <div id="hall-of-fame" class="hidden absolute top-4 left-4 w-full max-w-xs bg-black/50 backdrop-blur-md border border-yellow-500/50 rounded-lg p-4 neon-border-gold z-20">
+        <div id="hall-of-fame" class="hidden absolute top-4 w-11/12 left-1/2 -translate-x-1/2 md:w-full md:max-w-xs md:left-4 md:-translate-x-0 bg-black/50 backdrop-blur-md border border-yellow-500/50 rounded-lg p-4 neon-border-gold z-20">
             <h3 class="text-xl font-bold text-yellow-400 neon-text-gold text-center border-b border-yellow-500/30 pb-2 mb-2"><i class="fas fa-crown mr-2"></i>HALL DA FAMA</h3>
             <div id="hall-of-fame-list" class="space-y-2 overflow-y-auto max-h-48 no-scrollbar pr-2">
                 <!-- Donor list will be populated here -->
@@ -289,7 +289,7 @@
             </div>
         </div>
 
-        <footer class="absolute bottom-0 left-0 right-0 p-4 bg-black/50 border-t border-cyan-500/20 flex justify-between items-center">
+        <footer class="absolute bottom-0 left-0 right-0 p-4 bg-black/50 border-t border-cyan-500/20 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
             <div class="flex items-center gap-4">
                 <div id="user-profile-footer" class="flex items-center gap-3 cursor-pointer group">
                     <img id="user-avatar-home" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-cyan-400 group-hover:border-white transition-all">
@@ -330,9 +330,9 @@
   </div>
 
   <!-- Chat Screen (1-on-1 Random) -->
-  <main id="chat-screen" class="hidden w-full h-screen p-4 flex gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+  <main id="chat-screen" class="hidden w-full h-screen p-4 flex flex-col md:flex-row gap-4 font-orbitron bg-black relative overflow-hidden z-10">
     <!-- Left Sidebar -->
-    <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+    <aside class="w-full md:w-1/4 h-auto md:h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
       <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">STATUS</h2>
       <div class="flex-grow flex flex-col justify-center items-center text-center">
         <div class="relative flex items-center justify-center w-24 h-24 mb-4">
@@ -357,7 +357,7 @@
     </aside>
 
     <!-- Center Chat -->
-    <section class="w-1/2 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
+    <section class="w-full md:w-1/2 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
         <header class="p-3 border-b border-gray-700/50 text-center flex items-center gap-4 justify-center">
           <img id="partner-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500">
           <div>
@@ -379,7 +379,7 @@
     </section>
 
     <!-- Right Sidebar -->
-    <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+    <aside class="w-full md:w-1/4 h-auto md:h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
       <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">ÁREA VIP</h2>
       <div class="flex-grow flex flex-col justify-center gap-4">
           <button class="w-full text-center p-4 border-2 border-cyan-400 rounded-md neon-button-glow hover:bg-cyan-400 hover:text-black transition-all">
@@ -398,11 +398,11 @@
   </main>
 
     <!-- Global Chat Screen -->
-    <main id="global-chat-screen" class="hidden w-full h-screen p-4 flex gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+    <main id="global-chat-screen" class="hidden w-full h-screen p-4 flex flex-col md:flex-row gap-4 font-orbitron bg-black relative overflow-hidden z-10">
         <!-- Left Sidebar - Online Users -->
-        <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+        <aside id="global-chat-sidebar" class="w-full md:w-1/4 h-auto md:h-full hidden md:flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
-                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center">ONLINE NO CHAT</h2>
+                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center">ONLINE</h2>
                  <button id="global-chat-back-btn" class="text-cyan-400 hover:text-white transition-colors">
                     <i class="fas fa-arrow-left fa-lg"></i>
                 </button>
@@ -413,8 +413,11 @@
         </aside>
 
         <!-- Center Chat -->
-        <section class="w-3/4 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
-            <header class="p-3 border-b border-gray-700/50 text-center">
+        <section class="w-full md:w-3/4 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
+            <header class="relative p-3 border-b border-gray-700/50 text-center">
+                 <button id="toggle-users-btn" class="md:hidden text-cyan-400 hover:text-white transition-colors absolute left-4 top-1/2 -translate-y-1/2">
+                    <i class="fas fa-users fa-lg"></i>
+                </button>
                 <h3 class="font-bold text-lg text-white neon-text-cyan">CHAT GLOBAL</h3>
                 <p class="text-xs text-gray-400">Todos os humanos conectados no Vazio.</p>
             </header>
@@ -437,9 +440,9 @@
     
     <!-- Contacts Screen -->
     <div id="contacts-screen" class="hidden w-full h-full flex flex-col justify-center items-center p-4 relative z-10">
-        <div class="w-full max-w-2xl h-4/5 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 neon-border-cyan flex flex-col">
+        <div class="w-full max-w-2xl h-4/5 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 md:p-6 neon-border-cyan flex flex-col">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
-                <h2 class="text-3xl font-bold text-cyan-400 neon-text-cyan">CONTATOS</h2>
+                <h2 class="text-2xl md:text-3xl font-bold text-cyan-400 neon-text-cyan">CONTATOS</h2>
                 <button id="contacts-back-btn" class="text-cyan-400 hover:text-white transition-colors">
                    <i class="fas fa-times fa-lg"></i>
                </button>
@@ -452,7 +455,7 @@
 
     <!-- Private Chat Screen -->
     <main id="private-chat-screen" class="hidden w-full h-screen p-4 flex justify-center items-center font-orbitron bg-black relative overflow-hidden z-10">
-        <section class="w-full max-w-3xl h-5/6 flex flex-col bg-black/50 border border-cyan-500/50 neon-border-cyan rounded-lg overflow-hidden z-10">
+        <section class="w-full max-w-3xl h-full md:h-5/6 flex flex-col bg-black/50 border border-cyan-500/50 neon-border-cyan rounded-lg overflow-hidden z-10">
             <header class="p-3 border-b border-cyan-500/50 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <img id="private-chat-partner-avatar" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500">
@@ -481,7 +484,7 @@
 
     <!-- Notifications Modal -->
     <div id="notifications-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-full max-w-md h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-6 neon-border-cyan flex flex-col">
+        <div class="w-11/12 max-w-md h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 neon-border-cyan flex flex-col">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan">NOTIFICAÇÕES</h2>
                 <button id="notifications-close-btn" class="text-cyan-400 hover:text-white transition-colors">
@@ -496,17 +499,17 @@
 
     <!-- Donation Modal -->
     <div id="donation-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xl items-center justify-center p-4 z-50">
-      <div class="w-full max-w-lg rounded-lg animated-premium-border">
-          <div class="relative bg-black/90 p-8 rounded-lg text-center">
+      <div class="w-11/12 max-w-lg rounded-lg animated-premium-border">
+          <div class="relative bg-black/90 p-6 md:p-8 rounded-lg text-center">
               <button id="donation-modal-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-20">
                   <i class="fas fa-times fa-2x"></i>
               </button>
               <div class="mb-6">
                 <i class="fas fa-rocket text-5xl text-purple-400" style="text-shadow: 0 0 15px #a855f7;"></i>
-                  <h2 class="text-4xl font-black text-purple-400 mt-4" style="text-shadow: 0 0 5px #a855f7, 0 0 10px #ffd700;">MANTENHA O VAZIO VIVO!</h2>
-                  <p class="text-lg text-gray-300 mt-4">Sua doação ajuda a manter nossos servidores online e completamente livres de anúncios.</p>
+                  <h2 class="text-3xl md:text-4xl font-black text-purple-400 mt-4" style="text-shadow: 0 0 5px #a855f7, 0 0 10px #ffd700;">MANTENHA O VAZIO VIVO!</h2>
+                  <p class="text-base md:text-lg text-gray-300 mt-4">Sua doação ajuda a manter nossos servidores online e completamente livres de anúncios.</p>
               </div>
-              <button id="donate-now-btn" class="w-full font-bold py-4 px-4 rounded-md text-black bg-purple-500 border-2 border-purple-300 transition-all text-xl uppercase tracking-widest neon-premium-glow hover:bg-purple-400">
+              <button id="donate-now-btn" class="w-full font-bold py-3 md:py-4 px-4 rounded-md text-black bg-purple-500 border-2 border-purple-300 transition-all text-lg md:text-xl uppercase tracking-widest neon-premium-glow hover:bg-purple-400">
                   <i class="fas fa-hand-holding-heart mr-2"></i>DOAR AGORA
               </button>
               <p class="text-xs text-gray-500 mt-4">Após doar, envie o comprovante no suporte para aparecer no Ranking!</p>
@@ -516,9 +519,9 @@
 
     <!-- Support Modal (Create Ticket) -->
     <div id="support-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-full max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-8 neon-border-cyan space-y-6">
+        <div class="w-11/12 max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 md:p-8 neon-border-cyan space-y-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-3xl font-bold text-white neon-text-cyan">ABRIR CHAMADO</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-white neon-text-cyan">ABRIR CHAMADO</h1>
                 <button id="support-modal-close-btn" class="text-cyan-400 hover:text-white transition-colors">
                    <i class="fas fa-times fa-lg"></i>
                </button>
@@ -554,9 +557,9 @@
     </div>
 
     <!-- Admin Panel -->
-    <div id="admin-panel" class="hidden w-full h-full flex-col p-4 relative z-20 no-scrollbar overflow-y-auto">
+    <div id="admin-panel" class="hidden w-full h-full flex flex-col p-4 relative z-20 overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between border-b border-green-500/30 pb-3 mb-4">
-            <h2 class="text-3xl font-bold text-green-400 neon-text-green">PAINEL ADMIN</h2>
+            <h2 class="text-2xl md:text-3xl font-bold text-green-400 neon-text-green">PAINEL ADMIN</h2>
             <button id="admin-panel-back-btn" class="text-green-400 hover:text-white transition-colors">
                <i class="fas fa-arrow-left fa-lg mr-2"></i> VOLTAR
            </button>
@@ -566,7 +569,7 @@
         <div class="mb-6 bg-black/30 p-4 rounded-lg border border-green-500/30">
             <h3 class="text-2xl font-bold text-green-400 neon-text-green mb-3">Gerenciar Doações</h3>
             <form id="donation-form" class="space-y-3">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input type="text" id="donation-name" placeholder="Nome do Doador" required class="bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
                     <input type="number" id="donation-amount" placeholder="Valor (Ex: 50.00)" step="0.01" required class="bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
                     <input type="text" id="donation-message" placeholder="Mensagem Curta" required class="bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
@@ -576,13 +579,13 @@
         </div>
         
        <!-- Ticket Management -->
-       <div>
+       <div class="flex-shrink-0">
             <h3 class="text-2xl font-bold text-green-400 neon-text-green mb-3">Gerenciar Tickets</h3>
             <div id="admin-filters" class="flex items-center gap-2 mb-4">
                     <button data-filter="Pendentes" class="admin-filter-btn font-bold py-1 px-3 rounded-md text-cyan-400 border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all active">Pendentes</button>
                     <button data-filter="Resolvido" class="admin-filter-btn font-bold py-1 px-3 rounded-md text-cyan-400 border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Resolvidos</button>
             </div>
-            <div id="admin-tickets-list" class="flex-grow space-y-4 no-scrollbar pr-2">
+            <div id="admin-tickets-list" class="space-y-4 no-scrollbar pr-2">
                 <!-- Tickets will be populated here -->
             </div>
         </div>
@@ -590,11 +593,11 @@
     
     <!-- User Tickets Modal (List View) -->
     <div id="user-tickets-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-full max-w-2xl h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-6 neon-border-cyan flex flex-col">
+        <div class="w-11/12 max-w-2xl h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 neon-border-cyan flex flex-col">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan">MEUS CHAMADOS</h2>
                 <div class="flex items-center gap-4">
-                    <button id="open-new-ticket-btn" class="font-bold py-1 px-3 rounded-md text-black bg-cyan-400 neon-button-glow transition-all">NOVO CHAMADO</button>
+                    <button id="open-new-ticket-btn" class="font-bold py-1 px-3 rounded-md text-black bg-cyan-400 neon-button-glow transition-all text-sm md:text-base">NOVO</button>
                     <button id="user-tickets-close-btn" class="text-cyan-400 hover:text-white transition-colors">
                        <i class="fas fa-times fa-lg"></i>
                    </button>
@@ -608,11 +611,11 @@
 
     <!-- Ticket Chat Modal (Used by Admin and User) -->
     <div id="ticket-chat-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-        <div id="ticket-chat-modal-content" class="w-full max-w-2xl h-[90vh] bg-black/50 border rounded-lg flex flex-col">
+        <div id="ticket-chat-modal-content" class="w-11/12 max-w-2xl h-[90vh] bg-black/50 border rounded-lg flex flex-col">
             <!-- Header -->
             <div id="ticket-chat-modal-header" class="p-4 border-b flex justify-between items-center">
                 <div>
-                    <h2 id="ticket-chat-modal-subject" class="text-xl font-bold"></h2>
+                    <h2 id="ticket-chat-modal-subject" class="text-lg md:text-xl font-bold"></h2>
                     <p id="ticket-chat-modal-status" class="text-sm"></p>
                 </div>
                 <button id="ticket-chat-modal-close-btn" class="text-2xl">&times;</button>
@@ -714,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
         myTicketsBtn = document.getElementById('my-tickets-btn'), userTicketsCloseBtn = document.getElementById('user-tickets-close-btn'),
         openNewTicketBtn = document.getElementById('open-new-ticket-btn'), adminBtn = document.getElementById('admin-btn'),
         adminPanelBackBtn = document.getElementById('admin-panel-back-btn'), ticketChatModalCloseBtn = document.getElementById('ticket-chat-modal-close-btn'),
-        ticketChatDeleteBtn = document.getElementById('ticket-chat-delete-btn');
+        ticketChatDeleteBtn = document.getElementById('ticket-chat-delete-btn'), toggleUsersBtn = document.getElementById('toggle-users-btn');
   const loginForm = document.getElementById('login-form'), profileForm = document.getElementById('profile-form'),
         messageForm = document.getElementById('message-form'), globalMessageForm = document.getElementById('global-message-form'),
         privateMessageForm = document.getElementById('private-message-form'), supportForm = document.getElementById('support-form'),
@@ -746,7 +749,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ticketChatModalStatus = document.getElementById('ticket-chat-modal-status'), ticketChatMessagesContainer = document.getElementById('ticket-chat-messages-container'),
         ticketChatAdminControls = document.getElementById('ticket-chat-admin-controls'), ticketChatUserControls = document.getElementById('ticket-chat-user-controls'),
         ticketChatSendBtn = document.getElementById('ticket-chat-send-btn'),
-        hallOfFameContainer = document.getElementById('hall-of-fame'), hallOfFameList = document.getElementById('hall-of-fame-list');
+        hallOfFameContainer = document.getElementById('hall-of-fame'), hallOfFameList = document.getElementById('hall-of-fame-list'),
+        globalChatSidebar = document.getElementById('global-chat-sidebar');
         
   // ---=== INITIALIZATION & BOOTSTRAP ===---
   try {
@@ -1332,6 +1336,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loginForm) { loginForm.addEventListener('submit', (e) => { e.preventDefault(); if (loginBtn) loginBtn.click(); }); }
   if (loginBtn) { loginBtn.addEventListener('click', () => { setLoadingState(true, 'Acessando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
   if (signupBtn) { signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
+  if (toggleUsersBtn && globalChatSidebar) { toggleUsersBtn.addEventListener('click', () => { globalChatSidebar.classList.toggle('hidden'); globalChatSidebar.classList.toggle('flex'); }); }
   
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
@@ -1446,4 +1451,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 </body>
-</html>--- END OF FILE src/app.component.ts ------ END OF FILE src/app.component.html ------ END OF FILE src/services/chat.service.ts ------ END OF FILE src/services/models/message.model.ts ------ END OF FILE src/components/home/home.component.ts ------ END OF FILE src/components/home/home.component.html ------ END OF FILE src/components/searching/searching.component.ts ------ END OF FILE src/components/searching/searching.component.html ------ END OF FILE src/components/chat/chat.component.ts ------ END OF FILE src/components/chat/chat.component.html ------ END OF FILE src/services/monetization.service.ts ------ END OF FILE server.js ---
+</html>
