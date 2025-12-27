@@ -677,7 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let privateChatRoomId = null;
   let privateMessagesListener = null;
   let contactsListener = null;
-  let notificationListener = null;
   let friendRequestListener = null;
   
   // ---=== DOM ELEMENT DECLARATIONS (Full list) ===---
@@ -809,15 +808,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   // ---=== CORE APP LOGIC & AUTH ===---
-  const handleAuthError = (error) => { setLoadingState(false); /* Unchanged */ };
+  const handleAuthError = (error) => { setLoadingState(false); if(authErrorEl) authErrorEl.textContent = error.message; };
   const managePresence = (user) => {
     const userStatusRef = db.ref(`/presence/${user.uid}`);
     const connectedRef = db.ref('.info/connected');
     connectedRef.on('value', (snap) => { if (snap.val() === true) { userStatusRef.set(true); userStatusRef.onDisconnect().remove(); db.ref(`users/${user.uid}/inGlobalChat`).onDisconnect().set(false); }});
   };
-  const listenForFriendRequests = (user) => { /* Unchanged */ };
-  const listenForNotifications = (user) => { /* Unchanged */ };
-
+  
   const cleanupAllListeners = () => {
     const oldUser = currentUser;
     if (matchMakingListener && oldUser) db.ref(`users/${oldUser.uid}/currentChatRoomId`).off('value', matchMakingListener);
@@ -828,9 +825,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userTicketsListener && oldUser) db.ref('support_tickets').orderByChild('userId').equalTo(oldUser.uid).off('value', userTicketsListener);
     if (ticketRepliesListener && oldUser) db.ref('support_tickets').orderByChild('userId').equalTo(oldUser.uid).off('value', ticketRepliesListener);
     if (currentTicketChatListener) currentTicketChatListener.ref.off('value', currentTicketChatListener.listener);
+    if (friendRequestListener && oldUser) db.ref(`friend_requests/${oldUser.uid}`).off('value', friendRequestListener);
+    if (contactsListener && oldUser) db.ref(`friends/${oldUser.uid}`).off('value', contactsListener);
+    if (privateMessagesListener && privateChatRoomId) db.ref(`private_chats/${privateChatRoomId}/messages`).off('child_added', privateMessagesListener);
     
     matchMakingListener = null; messagesListener = null; globalMessagesListener = null; globalOnlineListener = null;
     adminTicketsListener = null; userTicketsListener = null; ticketRepliesListener = null; currentTicketChatListener = null;
+    friendRequestListener = null; contactsListener = null; privateMessagesListener = null;
     
     console.log('Todos os listeners foram limpos devido ao logout.');
   };
@@ -839,12 +840,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoadingState(true, 'Inicializando Vazio...');
     auth.getRedirectResult().catch(handleAuthError);
     auth.onAuthStateChanged((user) => {
-      const isNewLogin = currentUser === null && user !== null;
       const isLogout = currentUser !== null && user === null;
-
-      if (isLogout) {
-        cleanupAllListeners();
-      }
+      if (isLogout) cleanupAllListeners();
 
       if (adminBtn) adminBtn.classList.add('hidden');
       if (user) {
@@ -857,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserProfile = profile;
             updateUI(currentUserProfile); populateProfileModal(currentUserProfile);
             showView('home');
-            managePresence(user); listenForNotifications(user); listenForFriendRequests(user); listenForTicketReplies(user);
+            managePresence(user); listenForTicketReplies(user); listenForFriendRequests(user);
             
             const myUserRef = db.ref(`users/${currentUser.uid}`);
             if (matchMakingListener) myUserRef.child('currentChatRoomId').off('value', matchMakingListener);
@@ -873,214 +870,228 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             });
-
           } else {
             currentUserProfile = null; showProfileModal(true);
           }
-          setLoadingState(false);
-          document.body.classList.remove('hide-until-ready');
-        }).catch((error) => { 
-          setLoadingState(false); 
-          showView('login'); 
-          document.body.classList.remove('hide-until-ready');
-        });
+          setLoadingState(false); document.body.classList.remove('hide-until-ready');
+        }).catch((error) => { setLoadingState(false); showView('login'); document.body.classList.remove('hide-until-ready');});
       } else {
         currentUser = null; currentUserProfile = null;
-        showView('landing');
-        setLoadingState(false);
-        document.body.classList.remove('hide-until-ready');
+        showView('landing'); setLoadingState(false); document.body.classList.remove('hide-until-ready');
       }
     });
   };
 
-  // ---=== CHAT, MATCHING & FRIENDS LOGIC (RESTORED & REFINED) ===---
+  // ---=== CHAT, MATCHING & FRIENDS LOGIC ===---
     const resetRandomChatState = async () => {
         if (roomRef) {
             if (messagesListener) roomRef.child('messages').off('child_added', messagesListener);
             await roomRef.remove().catch(e => console.error("Error removing room:", e));
         }
-        
         const updates = {};
-        if (currentUser) {
-            updates[`users/${currentUser.uid}/currentChatRoomId`] = null;
-            updates[`users/${currentUser.uid}/searching`] = false;
-        }
-        if (partnerId) {
-            updates[`users/${partnerId}/currentChatRoomId`] = null;
-        }
+        if (currentUser) { updates[`users/${currentUser.uid}/currentChatRoomId`] = null; updates[`users/${currentUser.uid}/searching`] = false; }
+        if (partnerId) { updates[`users/${partnerId}/currentChatRoomId`] = null; }
         await db.ref().update(updates).catch(e => console.error("Error updating users:", e));
-
-        chatRoomId = null;
-        partnerId = null;
-        roomRef = null;
-        messagesListener = null;
+        chatRoomId = null; partnerId = null; roomRef = null; messagesListener = null;
         if(chatContainer) chatContainer.innerHTML = '';
     };
-    
-    const exitRandomChat = async () => {
-        await resetRandomChatState();
-        showView('home');
-    };
-
-    const findNextPartner = async () => {
-        await resetRandomChatState();
-        findPartner();
-    };
-
+    const exitRandomChat = async () => { await resetRandomChatState(); showView('home'); };
+    const findNextPartner = async () => { await resetRandomChatState(); findPartner(); };
     const renderMessage = (msg, container, isGlobal = false, partnerProfile = null) => {
         if (!currentUser || !msg) return;
         const isMe = msg.senderId === currentUser.uid;
         const msgDiv = document.createElement('div');
         msgDiv.className = `flex items-start gap-3 mb-4 ${isMe ? 'justify-end' : 'fade-in'}`;
         
-        let senderName, senderAvatar;
-
-        if (isGlobal) {
-            senderName = msg.senderName;
-            senderAvatar = msg.senderAvatar;
-        } else {
+        let senderName = msg.senderName, senderAvatar = msg.senderAvatar;
+        if (!isGlobal) {
             senderName = isMe ? currentUserProfile.username : (partnerProfile ? partnerProfile.username : 'Estranho');
             senderAvatar = isMe ? currentUserProfile.avatar : (partnerProfile ? partnerProfile.avatar : 'https://i.pravatar.cc/150');
         }
-
-        let nameHtml;
+        
+        let nameHtml = `<p class="font-bold ${msg.isVip ? 'vip-name' : ''} ${isMe ? 'text-cyan-300' : 'text-white'}">${senderName}</p>`;
         if (msg.senderId === ADMIN_UID) {
             nameHtml = `<p class="admin-glow-gold">${senderName} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
-        } else {
-            nameHtml = `<p class="font-bold ${msg.isVip ? 'vip-name' : ''} ${isMe ? 'text-cyan-300' : 'text-white'}">${senderName}</p>`;
         }
-
-        const content = `
-            <div class="${isMe ? 'order-1' : ''}">
-                <img src="${senderAvatar}" class="w-10 h-10 rounded-full">
-            </div>
-            <div class="max-w-xs md:max-w-md ${isMe ? 'bg-cyan-800' : 'bg-gray-700'} rounded-lg p-3">
-                ${nameHtml}
-                <p class="text-white break-words">${msg.text}</p>
-            </div>`;
-        msgDiv.innerHTML = content;
-        if(container) {
-            container.appendChild(msgDiv);
-            container.scrollTop = container.scrollHeight;
-        }
+        
+        msgDiv.innerHTML = `<div class="${isMe ? 'order-1' : ''}"><img src="${senderAvatar}" class="w-10 h-10 rounded-full"></div><div class="max-w-xs md:max-w-md ${isMe ? 'bg-cyan-800' : 'bg-gray-700'} rounded-lg p-3">${nameHtml}<p class="text-white break-words">${msg.text}</p></div>`;
+        if(container) { container.appendChild(msgDiv); container.scrollTop = container.scrollHeight; }
     };
-
+    const sendFriendRequest = (targetUid) => {
+        if (!currentUser || !targetUid || currentUser.uid === targetUid) return;
+        db.ref(`friend_requests/${targetUid}/${currentUser.uid}`).set({ status: 'pending', from: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP });
+        alert('Pedido de amizade enviado!');
+    };
     const enterGlobalChat = () => {
         if (!currentUserProfile) return;
         showView('global-chat');
         if (globalChatContainer) globalChatContainer.innerHTML = '';
-        
         const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
-        userStatusRef.set(true);
-        userStatusRef.onDisconnect().set(false);
-
+        userStatusRef.set(true); userStatusRef.onDisconnect().set(false);
         const messagesRef = db.ref('global_chat').limitToLast(100);
         if (globalMessagesListener) messagesRef.off('child_added', globalMessagesListener);
-        globalMessagesListener = messagesRef.on('child_added', snapshot => {
-            renderMessage(snapshot.val(), globalChatContainer, true);
-        });
-
+        globalMessagesListener = messagesRef.on('child_added', snapshot => renderMessage(snapshot.val(), globalChatContainer, true));
         const usersInChatRef = db.ref('users').orderByChild('inGlobalChat').equalTo(true);
         if (globalOnlineListener) usersInChatRef.off('value', globalOnlineListener);
         globalOnlineListener = usersInChatRef.on('value', snapshot => {
           if (!globalOnlineUsersList) return;
           globalOnlineUsersList.innerHTML = '';
-          if (!snapshot.exists()) {
-             globalOnlineUsersList.innerHTML = '<p class="text-center text-gray-500 text-sm">Ninguém aqui ainda.</p>';
-             return;
-          }
+          if (!snapshot.exists()) { globalOnlineUsersList.innerHTML = '<p class="text-center text-gray-500 text-sm">Ninguém aqui ainda.</p>'; return; }
           snapshot.forEach(childSnapshot => {
-            const uid = childSnapshot.key;
-            const profile = childSnapshot.val();
+            const uid = childSnapshot.key, profile = childSnapshot.val();
             const userEl = document.createElement('div');
-            let nameHtml;
-            if (uid === ADMIN_UID) {
-                nameHtml = `<p class="admin-glow-gold text-sm">${profile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
-            } else {
-                nameHtml = `<p>${profile.username}</p>`;
-            }
-            userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50 cursor-pointer';
-            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"> ${nameHtml}`;
+            let nameHtml = `<p>${profile.username}</p>`;
+            if (uid === ADMIN_UID) nameHtml = `<p class="admin-glow-gold text-sm">${profile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
+            const addButton = (uid !== currentUser.uid) ? `<button data-uid="${uid}" class="add-friend-btn ml-auto text-cyan-400 hover:text-white transition-colors text-lg"><i class="fas fa-user-plus"></i></button>` : '';
+            userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50';
+            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"><div class="flex-grow">${nameHtml}</div>${addButton}`;
             globalOnlineUsersList.appendChild(userEl);
           });
         });
     };
-
     const leaveGlobalChat = async () => {
         if (!currentUser) return;
-
-        const messagesRef = db.ref('global_chat');
-        if (globalMessagesListener) messagesRef.off('child_added', globalMessagesListener);
-        globalMessagesListener = null;
-        
-        const usersInChatRef = db.ref('users').orderByChild('inGlobalChat').equalTo(true);
-        if (globalOnlineListener) usersInChatRef.off('value', globalOnlineListener);
-        globalOnlineListener = null;
-
+        if (globalMessagesListener) db.ref('global_chat').off('child_added', globalMessagesListener);
+        if (globalOnlineListener) db.ref('users').orderByChild('inGlobalChat').equalTo(true).off('value', globalOnlineListener);
+        globalMessagesListener = null; globalOnlineListener = null;
         const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
         await userStatusRef.set(false);
         userStatusRef.onDisconnect().cancel();
-
         showView('home');
     };
-    
     const findPartner = async () => {
         if (!currentUser) return;
         showView('scanning');
         const myRef = db.ref(`users/${currentUser.uid}`);
         await myRef.update({ searching: true, currentChatRoomId: null });
         myRef.child('searching').onDisconnect().remove();
-
         const searchRef = db.ref('users').orderByChild('searching').equalTo(true);
         const onMatchFound = async (snapshot) => {
             let partnerFound = false;
             snapshot.forEach(childSnapshot => {
                 const partnerUid = childSnapshot.key;
-                if (partnerUid !== currentUser.uid && !partnerFound) {
-                    partnerFound = true;
-                    searchRef.off('value', onMatchFound);
-                    createMatch(partnerUid);
-                }
+                if (partnerUid !== currentUser.uid && !partnerFound) { partnerFound = true; searchRef.off('value', onMatchFound); createMatch(partnerUid); }
             });
         };
         searchRef.on('value', onMatchFound);
     };
-
     const createMatch = async (pId) => {
         if (!currentUser) return;
         const newChatRoomId = [currentUser.uid, pId].sort().join('_');
         const updates = {};
-        updates[`users/${currentUser.uid}/searching`] = null;
-        updates[`users/${currentUser.uid}/currentChatRoomId`] = newChatRoomId;
-        updates[`users/${pId}/searching`] = null;
-        updates[`users/${pId}/currentChatRoomId`] = newChatRoomId;
+        updates[`users/${currentUser.uid}/searching`] = null; updates[`users/${currentUser.uid}/currentChatRoomId`] = newChatRoomId;
+        updates[`users/${pId}/searching`] = null; updates[`users/${pId}/currentChatRoomId`] = newChatRoomId;
         updates[`chat_rooms/${newChatRoomId}/participants`] = { [currentUser.uid]: true, [pId]: true };
         await db.ref().update(updates);
     };
-
     const enterChatRoom = async (roomId, pId) => {
-        chatRoomId = roomId;
-        partnerId = pId;
-        const partnerSnap = await db.ref(`users/${pId}`).once('value');
-        const partnerProfile = partnerSnap.val();
-        
+        chatRoomId = roomId; partnerId = pId;
+        const partnerSnap = await db.ref(`users/${pId}`).once('value'); const partnerProfile = partnerSnap.val();
         if(myAvatarChatEl && currentUserProfile) myAvatarChatEl.src = currentUserProfile.avatar;
         if(partnerAvatarChatEl && partnerProfile) partnerAvatarChatEl.src = partnerProfile.avatar;
         if(partnerNameEl && partnerProfile) partnerNameEl.textContent = partnerProfile.username;
         if(partnerInfoEl && partnerProfile) partnerInfoEl.textContent = `${partnerProfile.region} - ${partnerProfile.gender}`;
-        
-        showView('chat');
-        if(chatContainer) chatContainer.innerHTML = '';
-        
-        roomRef = db.ref(`chat_rooms/${roomId}`);
-        roomRef.onDisconnect().remove();
+        showView('chat'); if(chatContainer) chatContainer.innerHTML = '';
+        roomRef = db.ref(`chat_rooms/${roomId}`); roomRef.onDisconnect().remove();
         if(messagesListener) roomRef.child('messages').off('child_added', messagesListener);
-        messagesListener = roomRef.child('messages').on('child_added', snapshot => {
-            renderMessage(snapshot.val(), chatContainer, false, partnerProfile);
+        messagesListener = roomRef.child('messages').on('child_added', snapshot => renderMessage(snapshot.val(), chatContainer, false, partnerProfile));
+    };
+    const enterContactsScreen = () => {
+        if (!currentUser) return;
+        showView('contacts');
+        if (contactsList) contactsList.innerHTML = '';
+        const friendsRef = db.ref(`friends/${currentUser.uid}`);
+        if (contactsListener) friendsRef.off('value', contactsListener);
+        contactsListener = friendsRef.on('value', snapshot => {
+            if (!snapshot.exists()) { contactsList.innerHTML = '<p class="text-gray-500 text-center">Você ainda não tem amigos.</p>'; return; }
+            contactsList.innerHTML = '';
+            snapshot.forEach(childSnapshot => {
+                const friendId = childSnapshot.key;
+                db.ref(`users/${friendId}`).once('value').then(userSnap => {
+                    const friendProfile = userSnap.val();
+                    if (friendProfile) {
+                        db.ref(`presence/${friendId}`).once('value').then(presenceSnap => {
+                            const isOnline = presenceSnap.val() === true;
+                            const friendEl = document.createElement('div');
+                            friendEl.className = 'flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50'; friendEl.dataset.friendId = friendId;
+                            friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'}"><div class="flex-grow"><p class="font-bold text-lg">${friendProfile.username}</p><p class="text-sm ${isOnline ? 'text-green-400' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
+                            contactsList.appendChild(friendEl);
+                        });
+                    }
+                });
+            });
         });
     };
-
-  const enterContactsScreen = () => { /* Unchanged but will be called */ };
+    const leaveContactsScreen = () => {
+        if (contactsListener && currentUser) db.ref(`friends/${currentUser.uid}`).off('value', contactsListener);
+        contactsListener = null; showView('home');
+    };
+    const enterPrivateChat = async (friendId) => {
+        if (!currentUser) return;
+        const friendSnap = await db.ref(`users/${friendId}`).once('value');
+        currentPrivateChatFriend = friendSnap.val();
+        if (!currentPrivateChatFriend) { alert('Usuário não encontrado.'); return; }
+        privateChatRoomId = [currentUser.uid, friendId].sort().join('_');
+        showView('private-chat');
+        if (privateChatPartnerAvatar) privateChatPartnerAvatar.src = currentPrivateChatFriend.avatar;
+        if (privateChatPartnerName) privateChatPartnerName.textContent = currentPrivateChatFriend.username;
+        if (privateChatContainer) privateChatContainer.innerHTML = '';
+        const messagesRef = db.ref(`private_chats/${privateChatRoomId}/messages`).limitToLast(100);
+        if (privateMessagesListener) messagesRef.off('child_added', privateMessagesListener);
+        privateMessagesListener = messagesRef.on('child_added', snapshot => renderMessage(snapshot.val(), privateChatContainer, false, currentPrivateChatFriend));
+    };
+    const leavePrivateChat = () => {
+        if (privateMessagesListener && privateChatRoomId) db.ref(`private_chats/${privateChatRoomId}/messages`).off('child_added', privateMessagesListener);
+        privateMessagesListener = null; privateChatRoomId = null; currentPrivateChatFriend = null; enterContactsScreen();
+    };
+    const listenForFriendRequests = (user) => {
+        const requestsRef = db.ref(`friend_requests/${user.uid}`);
+        if(friendRequestListener) requestsRef.off('value', friendRequestListener);
+        friendRequestListener = requestsRef.on('value', snapshot => {
+            if(!snapshot.exists()) {
+                if(friendRequestNotification) friendRequestNotification.classList.add('hidden');
+                renderFriendRequests({}); return;
+            }
+            const requests = snapshot.val();
+            const pendingRequests = Object.values(requests).filter(req => req.status === 'pending');
+            if(friendRequestNotification) friendRequestNotification.classList.toggle('hidden', pendingRequests.length === 0);
+            renderFriendRequests(requests);
+        });
+    };
+    const renderFriendRequests = (requests) => {
+        if(!notificationsList) return;
+        notificationsList.innerHTML = '';
+        const pending = Object.entries(requests).filter(([,req]) => req.status === 'pending');
+        if(pending.length === 0) { notificationsList.innerHTML = '<p class="text-gray-500 text-center">Nenhuma nova notificação.</p>'; return; }
+        pending.forEach(([requesterId, ]) => {
+            db.ref(`users/${requesterId}`).once('value').then(snap => {
+                const profile = snap.val();
+                if(profile) {
+                    const reqEl = document.createElement('div');
+                    reqEl.className = 'flex items-center gap-3 bg-gray-800/50 p-3 rounded-lg';
+                    reqEl.innerHTML = `
+                        <img src="${profile.avatar}" class="w-10 h-10 rounded-full">
+                        <p class="flex-grow"><span class="font-bold">${profile.username}</span> quer ser seu amigo.</p>
+                        <button data-requester-id="${requesterId}" class="accept-friend-btn bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-3 rounded-md transition-colors">Aceitar</button>
+                        <button data-requester-id="${requesterId}" class="decline-friend-btn bg-red-600 hover:bg-red-500 text-white font-bold py-1 px-3 rounded-md transition-colors">Recusar</button>
+                    `;
+                    notificationsList.appendChild(reqEl);
+                }
+            });
+        });
+    };
+    const acceptFriendRequest = (requesterId) => {
+        if(!currentUser) return;
+        const updates = {};
+        updates[`friends/${currentUser.uid}/${requesterId}`] = true;
+        updates[`friends/${requesterId}/${currentUser.uid}`] = true;
+        updates[`friend_requests/${currentUser.uid}/${requesterId}`] = null;
+        db.ref().update(updates);
+    };
+    const declineFriendRequest = (requesterId) => {
+        if(!currentUser) return;
+        db.ref(`friend_requests/${currentUser.uid}/${requesterId}`).remove();
+    };
   
   // ---=== SUPPORT TICKET CHAT SYSTEM (UNCHANGED) ===---
   const listenForTicketReplies = (user) => {
@@ -1092,14 +1103,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ticketNotification) ticketNotification.classList.toggle('hidden', !hasUnread);
     });
   }
-  const showTicketChatModal = (show) => {
-    if (show) { if (ticketChatModal) { ticketChatModal.classList.remove('hidden'); ticketChatModal.classList.add('flex'); } }
-    else { if (ticketChatModal) { ticketChatModal.classList.add('hidden'); ticketChatModal.classList.remove('flex'); } }
-  };
+  const showTicketChatModal = (show) => { if (ticketChatModal) { ticketChatModal.classList.toggle('hidden', !show); ticketChatModal.classList.toggle('flex', show); } };
   const openTicketChatModal = (ticketId, role) => {
     const ticketRef = db.ref(`support_tickets/${ticketId}`);
     if (currentTicketChatListener) currentTicketChatListener.ref.off('value', currentTicketChatListener.listener);
-    
     const listener = ticketRef.on('value', snapshot => {
         const ticketData = snapshot.val();
         if (!ticketData) { closeTicketChatModal(); alert("Chamado não encontrado."); return; }
@@ -1111,10 +1118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ticketChatModalSubject) ticketChatModalSubject.textContent = ticketData.subject;
         if (ticketChatIdInput) ticketChatIdInput.value = ticketId;
         const statusColors = { 'Resolvido': 'text-green-400', 'Aguardando Admin': 'text-yellow-400', 'Aguardando Retorno do Cliente': 'text-blue-400', 'Aberto': 'text-gray-400' };
-        if (ticketChatModalStatus) {
-            ticketChatModalStatus.textContent = ticketData.status;
-            ticketChatModalStatus.className = `text-sm ${statusColors[ticketData.status] || 'text-gray-400'}`;
-        }
+        if (ticketChatModalStatus) { ticketChatModalStatus.textContent = ticketData.status; ticketChatModalStatus.className = `text-sm ${statusColors[ticketData.status] || 'text-gray-400'}`; }
         if (ticketChatAdminControls) ticketChatAdminControls.classList.toggle('hidden', !isAdmin);
         if (ticketChatUserControls) ticketChatUserControls.classList.toggle('hidden', isAdmin || ticketData.status !== 'Resolvido');
         if (isAdmin && ticketChatStatusSelect) ticketChatStatusSelect.value = ticketData.status;
@@ -1151,8 +1155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortedTickets = filteredTickets.sort(([, a], [, b]) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
     sortedTickets.forEach(([key, ticket]) => {
         const ticketEl = document.createElement('div');
-        ticketEl.className = 'bg-black/50 border border-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-800/50';
-        ticketEl.dataset.ticketId = key;
+        ticketEl.className = 'bg-black/50 border border-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-800/50'; ticketEl.dataset.ticketId = key;
         const firstMessage = Object.values(ticket.messages || {})[0]?.text || 'Sem mensagem inicial.';
         ticketEl.innerHTML = `<p class="font-bold text-cyan-400">${ticket.subject}</p><p class="text-sm text-gray-400">De: ${ticket.name} - Status: ${ticket.status}</p><p class="text-xs text-gray-500 truncate mt-1">${firstMessage}</p>`;
         adminTicketsList.appendChild(ticketEl);
@@ -1168,39 +1171,25 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAdminTickets(currentFilter);
     });
   };
-  const leaveAdminPanel = () => {
-    if (adminTicketsListener) db.ref('support_tickets').off('value', adminTicketsListener);
-    adminTicketsListener = null;
-    showView('home');
-  };
+  const leaveAdminPanel = () => { if (adminTicketsListener) db.ref('support_tickets').off('value', adminTicketsListener); adminTicketsListener = null; showView('home'); };
   const enterMyTicketsView = () => {
      if(!currentUser || !userTicketsList) return;
      showUserTicketsModal(true);
      const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(currentUser.uid);
      if (userTicketsListener) ticketsRef.off('value', userTicketsListener);
      userTicketsListener = ticketsRef.on('value', snapshot => {
-         const tickets = snapshot.val() || {};
-         userTicketsList.innerHTML = '';
+         const tickets = snapshot.val() || {}; userTicketsList.innerHTML = '';
          if (Object.keys(tickets).length === 0) { userTicketsList.innerHTML = `<p class="text-gray-500 text-center">Você não enviou nenhum chamado.</p>`; return; }
          const sortedTickets = Object.entries(tickets).sort(([, a], [, b]) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
          sortedTickets.forEach(([key, ticket]) => {
-             const ticketEl = document.createElement('div');
-             ticketEl.className = 'bg-gray-800/50 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50';
-             ticketEl.dataset.ticketId = key;
+             const ticketEl = document.createElement('div'); ticketEl.className = 'bg-gray-800/50 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50'; ticketEl.dataset.ticketId = key;
              const hasUnread = ticket.user_notified === false ? '<span class="text-red-500 ml-2">(Nova Resposta)</span>' : '';
              ticketEl.innerHTML = `<p class="font-bold text-cyan-400">${ticket.subject} ${hasUnread}</p><p class="text-xs">Status: ${ticket.status}</p>`;
              userTicketsList.appendChild(ticketEl);
          });
      });
   };
-  const leaveMyTicketsView = () => {
-      if(currentUser) {
-          const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(currentUser.uid);
-          if (userTicketsListener) ticketsRef.off('value', userTicketsListener);
-          userTicketsListener = null;
-      }
-      showUserTicketsModal(false);
-  };
+  const leaveMyTicketsView = () => { if(currentUser) { const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(currentUser.uid); if (userTicketsListener) ticketsRef.off('value', userTicketsListener); userTicketsListener = null; } showUserTicketsModal(false); };
   
   // ---=== EVENT LISTENERS (Error-Proofed & Prioritized) ===---
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(startApp).catch(startApp);
@@ -1211,8 +1200,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (privateChatCard) { privateChatCard.addEventListener('click', enterContactsScreen); }
   if (enterVoidBtn) { enterVoidBtn.addEventListener('click', () => showView('login')); }
   if (loginForm) { loginForm.addEventListener('submit', (e) => { e.preventDefault(); if (loginBtn) loginBtn.click(); }); }
-  if (loginBtn) { loginBtn.addEventListener('click', () => auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError)); }
-  if (signupBtn) { signupBtn.addEventListener('click', () => auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError)); }
+  if (loginBtn) { loginBtn.addEventListener('click', () => { setLoadingState(true, 'Acessando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
+  if (signupBtn) { signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
   if (googleSigninBtn) { googleSigninBtn.addEventListener('click', () => auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError)); }
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
@@ -1225,6 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); messageInput.value = ''; }}); }
   if (globalMessageForm) { if (globalMessageInput) globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); if(globalMessageInput.value.trim()){ db.ref('global_chat').push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: globalMessageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); globalMessageInput.value = ''; } }); }
+  if (privateMessageForm) { privateMessageForm.addEventListener('submit', e => { e.preventDefault(); if (privateMessageInput.value.trim() && privateChatRoomId) { db.ref(`private_chats/${privateChatRoomId}/messages`).push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: privateMessageInput.value.trim(), timestamp: firebase.database.ServerValue.TIMESTAMP }); privateMessageInput.value = ''; } }); }
   if (globalChatBackBtn) { globalChatBackBtn.addEventListener('click', leaveGlobalChat); }
   if (userProfileFooter) { userProfileFooter.addEventListener('click', () => showProfileModal(true)); }
   if (notificationsBtn) { notificationsBtn.addEventListener('click', () => showNotificationsModal(true)); }
@@ -1232,21 +1222,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (vipModalCloseBtn) { vipModalCloseBtn.addEventListener('click', () => showVipModal(false)); }
   if (randomChatExitBtn) { randomChatExitBtn.addEventListener('click', exitRandomChat); }
   if (nextBtn) { nextBtn.addEventListener('click', findNextPartner); }
+  if (contactsBackBtn) { contactsBackBtn.addEventListener('click', leaveContactsScreen); }
+  if (privateChatBackBtn) { privateChatBackBtn.addEventListener('click', leavePrivateChat); }
+  if (contactsList) { contactsList.addEventListener('click', e => { const el = e.target.closest('[data-friend-id]'); if(el) enterPrivateChat(el.dataset.friendId); }); }
+  if (globalOnlineUsersList) { globalOnlineUsersList.addEventListener('click', e => { const el = e.target.closest('.add-friend-btn'); if (el) sendFriendRequest(el.dataset.uid); }); }
+  if (notificationsList) { notificationsList.addEventListener('click', e => { const el = e.target; const requesterId = el.dataset.requesterId; if(!requesterId) return; if(el.classList.contains('accept-friend-btn')) acceptFriendRequest(requesterId); if(el.classList.contains('decline-friend-btn')) declineFriendRequest(requesterId); }); }
   
   // Support & Tickets System
   if (myTicketsBtn) { myTicketsBtn.addEventListener('click', enterMyTicketsView); }
   if (userTicketsCloseBtn) { userTicketsCloseBtn.addEventListener('click', leaveMyTicketsView); }
   if (openNewTicketBtn) { openNewTicketBtn.addEventListener('click', () => showSupportModal(true)); }
   if (supportModalCloseBtn) { supportModalCloseBtn.addEventListener('click', () => showSupportModal(false)); }
-  if (supportForm) {
-    supportForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const messageData = { text: e.target.elements['support-description'].value, senderId: currentUser.uid, senderName: currentUserProfile.username, timestamp: firebase.database.ServerValue.TIMESTAMP };
-      const ticketData = { name: e.target.elements['support-name'].value, email: e.target.elements['support-email'].value, subject: e.target.elements['support-subject'].value, userId: currentUser.uid, status: 'Aguardando Admin', user_notified: true, createdAt: firebase.database.ServerValue.TIMESTAMP, lastUpdated: firebase.database.ServerValue.TIMESTAMP };
-      const newTicketRef = db.ref('support_tickets').push(ticketData);
-      newTicketRef.child('messages').push(messageData).then(() => { alert('Chamado enviado!'); supportForm.reset(); showSupportModal(false); });
-    });
-  }
+  if (supportForm) { supportForm.addEventListener('submit', (e) => { e.preventDefault(); const messageData = { text: e.target.elements['support-description'].value, senderId: currentUser.uid, senderName: currentUserProfile.username, timestamp: firebase.database.ServerValue.TIMESTAMP }; const ticketData = { name: e.target.elements['support-name'].value, email: e.target.elements['support-email'].value, subject: e.target.elements['support-subject'].value, userId: currentUser.uid, status: 'Aguardando Admin', user_notified: true, createdAt: firebase.database.ServerValue.TIMESTAMP, lastUpdated: firebase.database.ServerValue.TIMESTAMP }; const newTicketRef = db.ref('support_tickets').push(ticketData); newTicketRef.child('messages').push(messageData).then(() => { alert('Chamado enviado!'); supportForm.reset(); showSupportModal(false); }); }); }
   if (userTicketsList) { userTicketsList.addEventListener('click', (e) => { const el = e.target.closest('[data-ticket-id]'); if(el) openTicketChatModal(el.dataset.ticketId, 'user'); }); }
 
   // Admin Panel
