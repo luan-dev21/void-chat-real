@@ -809,12 +809,19 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // ---=== CORE APP LOGIC & AUTH ===---
   const handleAuthError = (error) => { setLoadingState(false); if(authErrorEl) authErrorEl.textContent = error.message; };
-  const managePresence = (user) => {
-    const userStatusRef = db.ref(`/presence/${user.uid}`);
-    const connectedRef = db.ref('.info/connected');
-    connectedRef.on('value', (snap) => { if (snap.val() === true) { userStatusRef.set(true); userStatusRef.onDisconnect().remove(); db.ref(`users/${user.uid}/inGlobalChat`).onDisconnect().set(false); }});
-  };
   
+  const managePresence = (user) => {
+    const userProfileRef = db.ref(`/users/${user.uid}`);
+    const connectedRef = db.ref('.info/connected');
+    connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+            userProfileRef.update({ isOnline: true });
+            userProfileRef.child('isOnline').onDisconnect().set(false);
+            userProfileRef.child('inGlobalChat').onDisconnect().set(false);
+        }
+    });
+  };
+
   const cleanupAllListeners = () => {
     const oldUser = currentUser;
     if (matchMakingListener && oldUser) db.ref(`users/${oldUser.uid}/currentChatRoomId`).off('value', matchMakingListener);
@@ -840,8 +847,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoadingState(true, 'Inicializando Vazio...');
     auth.getRedirectResult().catch(handleAuthError);
     auth.onAuthStateChanged((user) => {
-      const isLogout = currentUser !== null && user === null;
-      if (isLogout) cleanupAllListeners();
+      const oldUser = currentUser;
+      const isLogout = oldUser !== null && user === null;
+      if (isLogout) {
+          db.ref(`users/${oldUser.uid}`).update({ isOnline: false, inGlobalChat: false });
+          cleanupAllListeners();
+      }
 
       if (adminBtn) adminBtn.classList.add('hidden');
       if (user) {
@@ -999,24 +1010,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const enterContactsScreen = () => {
         if (!currentUser) return;
         showView('contacts');
-        if (contactsList) contactsList.innerHTML = '';
         const friendsRef = db.ref(`friends/${currentUser.uid}`);
         if (contactsListener) friendsRef.off('value', contactsListener);
         contactsListener = friendsRef.on('value', snapshot => {
-            if (!snapshot.exists()) { contactsList.innerHTML = '<p class="text-gray-500 text-center">Você ainda não tem amigos.</p>'; return; }
-            contactsList.innerHTML = '';
+            if (contactsList) contactsList.innerHTML = '';
+            if (!snapshot.exists()) {
+                if (contactsList) contactsList.innerHTML = '<p class="text-gray-500 text-center">Você ainda não tem amigos.</p>';
+                return;
+            }
             snapshot.forEach(childSnapshot => {
                 const friendId = childSnapshot.key;
                 db.ref(`users/${friendId}`).once('value').then(userSnap => {
                     const friendProfile = userSnap.val();
                     if (friendProfile) {
-                        db.ref(`presence/${friendId}`).once('value').then(presenceSnap => {
-                            const isOnline = presenceSnap.val() === true;
-                            const friendEl = document.createElement('div');
-                            friendEl.className = 'flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50'; friendEl.dataset.friendId = friendId;
-                            friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'}"><div class="flex-grow"><p class="font-bold text-lg">${friendProfile.username}</p><p class="text-sm ${isOnline ? 'text-green-400' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
-                            contactsList.appendChild(friendEl);
-                        });
+                        const isOnline = friendProfile.isOnline === true;
+                        const friendEl = document.createElement('div');
+                        friendEl.className = 'flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50'; friendEl.dataset.friendId = friendId;
+                        friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'}"><div class="flex-grow"><p class="font-bold text-lg">${friendProfile.username}</p><p class="text-sm ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
+                        if (contactsList) contactsList.appendChild(friendEl);
                     }
                 });
             });
@@ -1032,9 +1043,22 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPrivateChatFriend = friendSnap.val();
         if (!currentPrivateChatFriend) { alert('Usuário não encontrado.'); return; }
         privateChatRoomId = [currentUser.uid, friendId].sort().join('_');
-        showView('private-chat');
+        
         if (privateChatPartnerAvatar) privateChatPartnerAvatar.src = currentPrivateChatFriend.avatar;
-        if (privateChatPartnerName) privateChatPartnerName.textContent = currentPrivateChatFriend.username;
+        if (privateChatPartnerName) {
+            if (friendId === ADMIN_UID) {
+                privateChatPartnerName.innerHTML = `<span class="admin-glow-gold">${currentPrivateChatFriend.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></span>`;
+            } else {
+                privateChatPartnerName.textContent = currentPrivateChatFriend.username;
+            }
+        }
+        if (privateChatPartnerStatus) {
+            const isOnline = currentPrivateChatFriend.isOnline === true;
+            privateChatPartnerStatus.textContent = isOnline ? 'Online' : 'Offline';
+            privateChatPartnerStatus.className = `text-xs ${isOnline ? 'text-green-400 neon-text-green' : 'text-red-500 neon-text-red'}`;
+        }
+
+        showView('private-chat');
         if (privateChatContainer) privateChatContainer.innerHTML = '';
         const messagesRef = db.ref(`private_chats/${privateChatRoomId}/messages`).limitToLast(100);
         if (privateMessagesListener) messagesRef.off('child_added', privateMessagesListener);
@@ -1209,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim() };
       if (!Object.values(profileData).every(Boolean)) { if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
       saveFullProfileBtn.disabled = true;
-      db.ref(`users/${currentUser.uid}`).update(profileData).then(() => location.reload());
+      db.ref(`users/${currentUser.uid}`).set(profileData).then(() => location.reload());
     });
   }
   if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); messageInput.value = ''; }}); }
