@@ -933,8 +933,11 @@ document.addEventListener('DOMContentLoaded', () => {
         db.ref(`friend_requests/${targetUid}/${currentUser.uid}`).set({ status: 'pending', from: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP });
         alert('Pedido de amizade enviado!');
     };
-    const enterGlobalChat = () => {
+    const enterGlobalChat = async () => {
         if (!currentUserProfile) return;
+        const friendsSnap = await db.ref(`friends/${currentUser.uid}`).once('value');
+        const friendUids = new Set(friendsSnap.exists() ? Object.keys(friendsSnap.val()) : []);
+
         showView('global-chat');
         if (globalChatContainer) globalChatContainer.innerHTML = '';
         const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
@@ -942,6 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const messagesRef = db.ref('global_chat').limitToLast(100);
         if (globalMessagesListener) messagesRef.off('child_added', globalMessagesListener);
         globalMessagesListener = messagesRef.on('child_added', snapshot => renderMessage(snapshot.val(), globalChatContainer, true));
+        
         const usersInChatRef = db.ref('users').orderByChild('inGlobalChat').equalTo(true);
         if (globalOnlineListener) usersInChatRef.off('value', globalOnlineListener);
         globalOnlineListener = usersInChatRef.on('value', snapshot => {
@@ -953,9 +957,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const userEl = document.createElement('div');
             let nameHtml = `<p>${profile.username}</p>`;
             if (uid === ADMIN_UID) nameHtml = `<p class="admin-glow-gold text-sm">${profile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
-            const addButton = (uid !== currentUser.uid) ? `<button data-uid="${uid}" class="add-friend-btn ml-auto text-cyan-400 hover:text-white transition-colors text-lg"><i class="fas fa-user-plus"></i></button>` : '';
+            
+            let relationshipButton = '';
+            if (uid !== currentUser.uid) {
+                if (friendUids.has(uid)) {
+                    relationshipButton = `<div class="ml-auto text-green-400 text-lg" title="Amigo"><i class="fas fa-check-circle"></i></div>`;
+                } else {
+                    relationshipButton = `<button data-uid="${uid}" class="add-friend-btn ml-auto text-cyan-400 hover:text-white transition-colors text-lg" title="Adicionar Amigo"><i class="fas fa-user-plus"></i></button>`;
+                }
+            }
+            
             userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50';
-            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"><div class="flex-grow">${nameHtml}</div>${addButton}`;
+            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"><div class="flex-grow">${nameHtml}</div>${relationshipButton}`;
             globalOnlineUsersList.appendChild(userEl);
           });
         });
@@ -967,7 +980,7 @@ document.addEventListener('DOMContentLoaded', () => {
         globalMessagesListener = null; globalOnlineListener = null;
         const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
         await userStatusRef.set(false);
-        userStatusRef.onDisconnect().cancel();
+        // Do not cancel the onDisconnect here, as it's a global one now.
         showView('home');
     };
     const findPartner = async () => {
@@ -1024,9 +1037,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const friendProfile = userSnap.val();
                     if (friendProfile) {
                         const isOnline = friendProfile.isOnline === true;
+                        let nameHtml;
+                        if (friendId === ADMIN_UID) {
+                            nameHtml = `<p class="admin-glow-gold text-lg">${friendProfile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
+                        } else {
+                            nameHtml = `<p class="font-bold text-lg">${friendProfile.username}</p>`;
+                        }
                         const friendEl = document.createElement('div');
                         friendEl.className = 'flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50'; friendEl.dataset.friendId = friendId;
-                        friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'}"><div class="flex-grow"><p class="font-bold text-lg">${friendProfile.username}</p><p class="text-sm ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
+                        friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'}"><div class="flex-grow">${nameHtml}<p class="text-sm ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
                         if (contactsList) contactsList.appendChild(friendEl);
                     }
                 });
@@ -1230,7 +1249,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim() };
+      const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim(), isOnline: false };
       if (!Object.values(profileData).every(Boolean)) { if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
       saveFullProfileBtn.disabled = true;
       db.ref(`users/${currentUser.uid}`).set(profileData).then(() => location.reload());
