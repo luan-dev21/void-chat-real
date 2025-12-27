@@ -857,15 +857,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // ---=== CHAT, MATCHING & FRIENDS LOGIC (RESTORED) ===---
-    const renderMessage = (msg, container, isGlobal = false) => {
+  // ---=== CHAT, MATCHING & FRIENDS LOGIC (RESTORED & REFINED) ===---
+    const resetRandomChatState = async () => {
+        if (roomRef) {
+            if (messagesListener) roomRef.child('messages').off('child_added', messagesListener);
+            await roomRef.remove().catch(e => console.error("Error removing room:", e));
+        }
+        
+        const updates = {};
+        if (currentUser) {
+            updates[`users/${currentUser.uid}/currentChatRoomId`] = null;
+            updates[`users/${currentUser.uid}/searching`] = false;
+        }
+        if (partnerId) {
+            updates[`users/${partnerId}/currentChatRoomId`] = null;
+        }
+        await db.ref().update(updates).catch(e => console.error("Error updating users:", e));
+
+        chatRoomId = null;
+        partnerId = null;
+        roomRef = null;
+        messagesListener = null;
+        if(chatContainer) chatContainer.innerHTML = '';
+    };
+    
+    const exitRandomChat = async () => {
+        await resetRandomChatState();
+        showView('home');
+    };
+
+    const findNextPartner = async () => {
+        await resetRandomChatState();
+        findPartner();
+    };
+
+    const renderMessage = (msg, container, isGlobal = false, partnerProfile = null) => {
         if (!currentUser || !msg) return;
         const isMe = msg.senderId === currentUser.uid;
         const msgDiv = document.createElement('div');
-        msgDiv.className = `flex items-start gap-3 mb-4 ${isMe ? 'justify-end' : ''}`;
+        msgDiv.className = `flex items-start gap-3 mb-4 ${isMe ? 'justify-end' : 'fade-in'}`;
         
-        const senderName = isGlobal ? msg.senderName : (isMe ? currentUserProfile.username : partnerId ? 'Estranho' : 'Usuário');
-        const senderAvatar = isGlobal ? msg.senderAvatar : (isMe ? currentUserProfile.avatar : partnerId ? `https://i.pravatar.cc/150?u=${partnerId}`: 'https://i.pravatar.cc/150');
+        let senderName, senderAvatar;
+
+        if (isGlobal) {
+            senderName = msg.senderName;
+            senderAvatar = msg.senderAvatar;
+        } else {
+            senderName = isMe ? currentUserProfile.username : (partnerProfile ? partnerProfile.username : 'Estranho');
+            senderAvatar = isMe ? currentUserProfile.avatar : (partnerProfile ? partnerProfile.avatar : 'https://i.pravatar.cc/150');
+        }
 
         const content = `
             <div class="${isMe ? 'order-1' : ''}">
@@ -961,9 +1001,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if(chatContainer) chatContainer.innerHTML = '';
         
         roomRef = db.ref(`chat_rooms/${roomId}`);
+        roomRef.onDisconnect().remove();
         if(messagesListener) roomRef.child('messages').off('child_added', messagesListener);
         messagesListener = roomRef.child('messages').on('child_added', snapshot => {
-            renderMessage(snapshot.val(), chatContainer, false);
+            renderMessage(snapshot.val(), chatContainer, false, partnerProfile);
         });
     };
 
@@ -1108,13 +1149,15 @@ document.addEventListener('DOMContentLoaded', () => {
       db.ref(`users/${currentUser.uid}`).update(profileData).then(() => location.reload());
     });
   }
-  if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), isVip: currentUserProfile.isVip || false }); messageInput.value = ''; }}); }
-  if (globalMessageForm) { if (globalMessageInput) globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); db.ref('global_chat').push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: globalMessageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); globalMessageInput.value = ''; }); }
+  if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); messageInput.value = ''; }}); }
+  if (globalMessageForm) { if (globalMessageInput) globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); if(globalMessageInput.value.trim()){ db.ref('global_chat').push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: globalMessageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); globalMessageInput.value = ''; } }); }
   if (globalChatBackBtn) { globalChatBackBtn.addEventListener('click', () => showView('home')); }
   if (userProfileFooter) { userProfileFooter.addEventListener('click', () => showProfileModal(true)); }
   if (notificationsBtn) { notificationsBtn.addEventListener('click', () => showNotificationsModal(true)); }
   if (notificationsCloseBtn) { notificationsCloseBtn.addEventListener('click', () => showNotificationsModal(false)); }
   if (vipModalCloseBtn) { vipModalCloseBtn.addEventListener('click', () => showVipModal(false)); }
+  if (randomChatExitBtn) { randomChatExitBtn.addEventListener('click', exitRandomChat); }
+  if (nextBtn) { nextBtn.addEventListener('click', findNextPartner); }
   
   // Support & Tickets System
   if (myTicketsBtn) { myTicketsBtn.addEventListener('click', enterMyTicketsView); }
