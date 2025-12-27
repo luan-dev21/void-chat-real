@@ -173,8 +173,8 @@
   <!-- Landing Screen -->
   <div id="landing-screen" class="hidden w-full h-full flex-col items-center justify-center p-4 relative z-10">
       <div class="text-center space-y-8">
-          <h1 class="text-6xl md:text-9xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
-          <button id="enter-void-btn" class="text-2xl font-bold py-4 px-10 rounded-md text-black bg-cyan-400 border-2 border-cyan-200 neon-pulse-cyan transition-all uppercase">
+          <h1 class="text-5xl sm:text-6xl md:text-9xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
+          <button id="enter-void-btn" class="text-xl md:text-2xl font-bold py-4 px-10 rounded-md text-black bg-cyan-400 border-2 border-cyan-200 neon-pulse-cyan transition-all uppercase">
               [ Entrar no Vazio ]
           </button>
       </div>
@@ -198,101 +198,174 @@
           <input type="password" id="password" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
         </div>
         <p id="auth-error" class="text-red-500 text-xs text-center h-4"></p>
-        <div class="space-y-2">
-            <button type="submit" id="login-btn" class="w-full font-bold py-2 px-4 rounded-md text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">Entrar</button>
-            <button type="button" id="signup-btn" class="w-full font-bold py-2 px-4 rounded-md text-cyan-400 border-2 border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Criar Conta</button>
+        <div class="space-y-3">
+            <button type="submit" id="login-btn" class="w-full font-bold py-3 px-4 rounded-md text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">Entrar</button>
+            <button type="button" id="signup-btn" class="w-full font-bold py-3 px-4 rounded-md text-cyan-400 border-2 border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Criar Conta</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Profile Creation Modal -->
-  <div id="profile-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-      <div class="w-11/12 max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 md:p-8 neon-border-cyan space-y-6">
-          <div class="text-center">
-              <h1 class="text-2xl md:text-3xl font-bold text-white neon-text-green">COMPLETE SEU PERFIL</h1>
-              <p class="text-cyan-400 neon-text-cyan text-sm">Sua identidade para mergulhar no Vazio.</p>
-          </div>
-          <form id="profile-form" class="space-y-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                      <label for="username-input" class="block text-cyan-400 text-sm mb-1">Username</label>
-                      <input type="text" id="username-input" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
-                  </div>
-                  <div>
-                      <label for="gender-select" class="block text-cyan-400 text-sm mb-1">Sexo</label>
-                      <select id="gender-select" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
-                          <option value="">Selecione...</option>
-                          <option value="Masculino">Masculino</option>
-                          <option value="Feminino">Feminino</option>
-                          <option value="Outro">Outro</option>
-                      </select>
-                  </div>
-                  <div>
-                      <label for="region-select" class="block text-cyan-400 text-sm mb-1">Região (Estado)</label>
-                      <select id="region-select" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
-                        <!-- Options will be populated by JS -->
-                      </select>
-                  </div>
-                   <div>
-                      <label for="interests-input" class="block text-cyan-400 text-sm mb-1">Interesses</label>
-                      <input type="text" id="interests-input" placeholder="Games, Música, etc" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
-                  </div>
-              </div>
-               <div>
-                  <label for="avatar-input" class="block text-cyan-400 text-sm mb-1">URL da Foto de Perfil / Avatar</label>
-                  <input type="url" id="avatar-input" placeholder="https://exemplo.com/imagem.png" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
-              </div>
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 z-40">
+        <div class="w-[98vw] max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-4 md:p-6 neon-border-cyan space-y-4 max-h-[90vh] flex flex-col">
+            <!-- Header with close button -->
+            <div class="flex-shrink-0 flex justify-between items-center">
+                <h1 id="profile-modal-title" class="text-xl md:text-2xl font-bold text-white neon-text-green">MEU PERFIL</h1>
+                <button id="profile-modal-close-btn" class="text-cyan-400 hover:text-white transition-colors">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
 
-              <p id="full-profile-error" class="text-red-500 text-xs text-center h-4"></p>
-              <button type="submit" id="save-full-profile-btn" class="w-full font-bold py-3 px-4 rounded-md text-black bg-cyan-400 neon-button-glow transition-all text-lg">SALVAR NO VAZIO</button>
-          </form>
-      </div>
-  </div>
+            <!-- View State -->
+            <div id="profile-view-state" class="flex flex-col items-center text-center space-y-4 p-1 flex-grow">
+                <div class="relative">
+                    <img id="profile-avatar-view" src="https://i.pravatar.cc/150" class="w-24 h-24 rounded-full border-4 border-cyan-400 object-cover">
+                    <button id="edit-profile-btn" class="absolute bottom-0 right-0 bg-cyan-500 text-black w-8 h-8 rounded-full flex items-center justify-center hover:bg-cyan-300 transition-colors">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                </div>
+                <h2 id="profile-username-view" class="text-2xl font-bold text-white neon-text-cyan">Carregando...</h2>
+                <div class="text-left w-full max-w-xs bg-black/20 p-4 rounded-lg border border-gray-700 space-y-2">
+                    <p><strong class="text-cyan-400">Sexo:</strong> <span id="profile-gender-view">...</span></p>
+                    <p><strong class="text-cyan-400">Região:</strong> <span id="profile-region-view">...</span></p>
+                    <p><strong class="text-cyan-400">Interesses:</strong> <span id="profile-interests-view">...</span></p>
+                </div>
+            </div>
+
+            <!-- Edit State (Form) -->
+            <form id="profile-form" class="hidden space-y-4 overflow-y-auto no-scrollbar p-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="username-input" class="block text-cyan-400 text-sm mb-1">Username</label>
+                        <input type="text" id="username-input" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                    </div>
+                    <div>
+                        <label for="gender-select" class="block text-cyan-400 text-sm mb-1">Sexo</label>
+                        <select id="gender-select" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
+                            <option value="">Selecione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="region-select" class="block text-cyan-400 text-sm mb-1">Região (Estado)</label>
+                        <select id="region-select" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all">
+                        </select>
+                    </div>
+                    <div>
+                        <label for="interests-input" class="block text-cyan-400 text-sm mb-1">Interesses</label>
+                        <input type="text" id="interests-input" placeholder="Games, Música, etc" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                    </div>
+                </div>
+                <div>
+                    <label for="avatar-input" class="block text-cyan-400 text-sm mb-1">URL da Foto de Perfil / Avatar</label>
+                    <input type="url" id="avatar-input" placeholder="https://exemplo.com/imagem.png" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all" />
+                </div>
+
+                <p id="full-profile-error" class="text-red-500 text-xs text-center h-4"></p>
+                <div class="space-y-2">
+                    <button type="submit" id="save-full-profile-btn" class="w-full font-bold py-3 px-4 rounded-md text-black bg-cyan-400 neon-button-glow transition-all text-lg">SALVAR ALTERAÇÕES</button>
+                    <button type="button" id="cancel-edit-profile-btn" class="w-full font-bold py-2 px-4 rounded-md text-cyan-400 border-2 border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">CANCELAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
   <!-- Home Screen -->
-    <div id="home-screen" class="hidden w-full h-full flex flex-col justify-center items-center p-4 relative z-10">
+    <div id="home-screen" class="hidden w-full h-full flex flex-col items-center p-4 relative z-10 overflow-hidden">
+        
+        <!-- Mobile Top Right Icons -->
+        <div class="lg:hidden absolute top-4 right-4 flex items-center gap-4 z-20">
+            <div class="relative">
+                <button id="notifications-btn-mobile" class="text-2xl text-cyan-400 hover:text-white transition-colors">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <span id="friend-request-notification-mobile" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-black notification-dot"></span>
+            </div>
+        </div>
+
         <!-- Hall of Fame -->
-        <div id="hall-of-fame" class="hidden absolute top-4 w-11/12 left-1/2 -translate-x-1/2 md:w-full md:max-w-xs md:left-4 md:-translate-x-0 bg-black/50 backdrop-blur-md border border-yellow-500/50 rounded-lg p-4 neon-border-gold z-20">
-            <h3 class="text-xl font-bold text-yellow-400 neon-text-gold text-center border-b border-yellow-500/30 pb-2 mb-2"><i class="fas fa-crown mr-2"></i>HALL DA FAMA</h3>
-            <div id="hall-of-fame-list" class="space-y-2 overflow-y-auto max-h-48 no-scrollbar pr-2">
-                <!-- Donor list will be populated here -->
+        <div id="hall-of-fame-wrapper" class="relative w-full max-w-lg mx-auto mt-8 lg:mt-0 lg:absolute lg:top-4 lg:w-full lg:max-w-xs lg:left-4 lg:mx-0 z-20">
+            <div id="hall-of-fame" class="hidden bg-black/50 backdrop-blur-md border border-yellow-500/50 rounded-lg p-4 neon-border-gold">
+                <h3 id="hall-of-fame-toggle" class="text-lg lg:text-xl font-bold text-yellow-400 neon-text-gold text-center border-b border-yellow-500/30 pb-2 mb-2 cursor-pointer lg:cursor-default flex items-center justify-center">
+                    <i class="fas fa-crown mr-2"></i>HALL DA FAMA <i class="fas fa-chevron-down lg:hidden ml-2 transform transition-transform"></i>
+                </h3>
+                <div id="hall-of-fame-list" class="space-y-2 overflow-y-auto max-h-48 no-scrollbar pr-2 hidden lg:block">
+                    <!-- Donor list will be populated here -->
+                </div>
             </div>
         </div>
 
-        <div class="text-center mb-12">
-            <h1 class="text-6xl md:text-8xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
-            <p class="text-cyan-400 mt-4 neon-text-cyan">ESCOLHA SEU CAMINHO NO VAZIO.</p>
+        <!-- Main Content Wrapper -->
+        <div class="w-full h-full flex flex-col justify-center items-center pb-24 lg:pb-0">
+            <!-- Mobile/Desktop Title -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl sm:text-6xl md:text-8xl font-black text-white neon-text-green tracking-widest">VOID CHAT</h1>
+                <p class="text-cyan-400 mt-4 neon-text-cyan">ESCOLHA SEU CAMINHO NO VAZIO.</p>
+                <button id="support-project-btn-mobile" class="lg:hidden mt-8 font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
+                    <i class="fas fa-heart mr-2"></i>APOIAR PROJETO
+                </button>
+            </div>
+
+            <!-- Cards Grid (Desktop Only) -->
+            <div id="home-cards-grid" class="hidden lg:grid lg:grid-cols-3 lg:gap-8 lg:max-w-4xl">
+                <!-- Card 1: Global Chat -->
+                <div id="global-chat-card" class="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
+                    <i class="fas fa-globe text-4xl text-cyan-400 mb-3"></i>
+                    <h2 class="text-2xl font-bold text-white">CHAT GLOBAL</h2>
+                    <p class="text-gray-400 text-sm mt-2">Converse com todos os usuários online.</p>
+                </div>
+                <!-- Card 2: Random Void (Matchmaking) -->
+                <div id="match-btn" class="bg-white/5 backdrop-blur-md border-2 border-cyan-400 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-800/60 transition-all cursor-pointer transform hover:scale-105">
+                    <i class="fas fa-random text-4xl text-cyan-300 mb-3"></i>
+                    <h2 class="text-2xl font-bold text-white">RANDOM VOID</h2>
+                    <p class="text-gray-300 text-sm mt-2">Mergulhe no desconhecido e encontre uma conexão.</p>
+                </div>
+                <!-- Card 3: Private Chat -->
+                <div id="private-chat-card" class="relative bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
+                    <div id="private-chat-notification" class="hidden absolute top-3 right-3 w-4 h-4 bg-red-600 rounded-full border-2 border-black notification-dot"></div>
+                    <i class="fas fa-user-secret text-4xl text-cyan-400 mb-3"></i>
+                    <h2 class="text-2xl font-bold text-white">CHAT PRIVADO</h2>
+                    <p class="text-gray-400 text-sm mt-2">Inicie conversas com seus contatos.</p>
+                </div>
+            </div>
         </div>
+        
+        <!-- Mobile Bottom Navigation -->
+        <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-cyan-500/30 flex justify-around p-1 z-30">
+            <button id="bottom-nav-global" class="flex flex-col items-center text-cyan-400 hover:text-white transition-colors w-1/5 p-1">
+                <i class="fas fa-globe fa-lg"></i>
+                <span class="text-[11px] mt-1">Global</span>
+            </button>
+            <button id="bottom-nav-match" class="flex flex-col items-center text-cyan-400 hover:text-white transition-colors w-1/5 p-1">
+                <i class="fas fa-random fa-lg"></i>
+                <span class="text-[11px] mt-1">Matching</span>
+            </button>
+            <button id="bottom-nav-private" class="flex flex-col items-center text-cyan-400 hover:text-white transition-colors w-1/5 p-1">
+                <i class="fas fa-user-secret fa-lg"></i>
+                <span class="text-[11px] mt-1">Privado</span>
+            </button>
+            <button id="bottom-nav-support" class="flex flex-col items-center text-cyan-400 hover:text-white transition-colors w-1/5 p-1">
+                <i class="fas fa-headset fa-lg"></i>
+                <span class="text-[11px] mt-1">Suporte</span>
+            </button>
+            <button id="bottom-nav-profile" class="flex flex-col items-center text-cyan-400 hover:text-white transition-colors w-1/5 p-1">
+                <i class="fas fa-user-cog fa-lg"></i>
+                <span class="text-[11px] mt-1">Perfil</span>
+            </button>
+            <button id="bottom-nav-admin" class="hidden flex-col items-center text-green-400 hover:text-white transition-colors w-1/6 p-1">
+                <i class="fas fa-shield-halved fa-lg"></i>
+                <span class="text-[11px] mt-1">Admin</span>
+            </button>
+        </nav>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
-            <!-- Card 1: Global Chat -->
-            <div id="global-chat-card" class="bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
-                <i class="fas fa-globe text-4xl text-cyan-400 mb-4"></i>
-                <h2 class="text-2xl font-bold text-white">CHAT GLOBAL</h2>
-                <p class="text-gray-400 text-sm mt-2">Converse com todos os usuários online em uma única sala.</p>
-            </div>
 
-            <!-- Card 2: Random Void (Matchmaking) -->
-            <div id="match-btn" class="bg-white/5 backdrop-blur-md border-2 border-cyan-400 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-800/60 transition-all cursor-pointer transform hover:scale-105">
-                <i class="fas fa-random text-4xl text-cyan-300 mb-4"></i>
-                <h2 class="text-2xl font-bold text-white">RANDOM VOID</h2>
-                <p class="text-gray-300 text-sm mt-2">Mergulhe no desconhecido e encontre uma conexão anônima aleatória.</p>
-            </div>
-
-            <!-- Card 3: Private Chat -->
-            <div id="private-chat-card" class="relative bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 text-center neon-border-cyan hover:bg-cyan-900/50 transition-all cursor-pointer">
-                <div id="private-chat-notification" class="hidden absolute top-3 right-3 w-4 h-4 bg-red-600 rounded-full border-2 border-black notification-dot"></div>
-                <i class="fas fa-user-secret text-4xl text-cyan-400 mb-4"></i>
-                <h2 class="text-2xl font-bold text-white">CHAT PRIVADO</h2>
-                <p class="text-gray-400 text-sm mt-2">Inicie conversas diretas com seus contatos.</p>
-            </div>
-        </div>
-
-        <footer class="absolute bottom-0 left-0 right-0 p-4 bg-black/50 border-t border-cyan-500/20 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+        <footer class="hidden lg:flex w-full flex-shrink-0 p-4 bg-black/50 border-t border-cyan-500/20 flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
             <div class="flex items-center gap-4">
-                <div id="user-profile-footer" class="flex items-center gap-3 cursor-pointer group">
-                    <img id="user-avatar-home" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-cyan-400 group-hover:border-white transition-all">
+                <div id="user-profile-footer" class="hidden lg:flex items-center gap-3 cursor-pointer group">
+                    <img id="user-avatar-home" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-cyan-400 group-hover:border-white transition-all object-cover">
                     <div>
                         <p id="user-name-home" class="font-bold text-white group-hover:text-cyan-300 transition-all">Carregando...</p>
                         <p id="user-region-home" class="text-xs text-gray-400">...</p>
@@ -314,7 +387,7 @@
                     <i class="fas fa-shield-halved mr-1"></i>PAINEL ADMIN
                 </button>
             </div>
-            <button id="support-project-btn" class="font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
+            <button id="support-project-btn" class="hidden lg:block font-bold py-2 px-5 rounded-md text-white bg-purple-600 border border-purple-400 neon-premium-glow">
                 <i class="fas fa-heart mr-2"></i>APOIAR PROJETO
             </button>
         </footer>
@@ -330,16 +403,16 @@
   </div>
 
   <!-- Chat Screen (1-on-1 Random) -->
-  <main id="chat-screen" class="hidden w-full h-screen p-4 flex flex-col md:flex-row gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+  <main id="chat-screen" class="hidden w-full h-screen p-2 sm:p-4 flex flex-col md:flex-row gap-4 font-orbitron bg-black relative overflow-hidden z-10">
     <!-- Left Sidebar -->
-    <aside class="w-full md:w-1/4 h-auto md:h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
-      <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">STATUS</h2>
+    <aside class="w-full md:w-1/4 h-auto md:h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10 flex-shrink-0">
+      <h2 class="text-xl md:text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">STATUS</h2>
       <div class="flex-grow flex flex-col justify-center items-center text-center">
         <div class="relative flex items-center justify-center w-24 h-24 mb-4">
           <div class="absolute inset-0 bg-green-500/50 rounded-full animate-ping"></div>
-          <img id="my-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" class="w-20 h-20 rounded-full border-2 border-cyan-300 z-10">
+          <img id="my-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" class="w-20 h-20 rounded-full border-2 border-cyan-300 z-10 object-cover">
         </div>
-        <p class="text-2xl font-bold text-green-400 neon-text-green">ONLINE</p>
+        <p class="text-xl md:text-2xl font-bold text-green-400 neon-text-green">ONLINE</p>
         <p class="text-sm text-gray-400">Você está conectado ao Vazio.</p>
       </div>
        <div class="text-center border-t border-cyan-500/30 pt-4 space-y-3">
@@ -350,16 +423,16 @@
               HUMANOS CONECTADOS
             </p>
           </div>
-          <button id="random-chat-exit-btn" class="w-full p-2 bg-red-800/50 hover:bg-red-700/50 border border-red-500/50 rounded-md transition-colors text-sm">
+          <button id="random-chat-exit-btn" class="w-full py-3 px-4 bg-red-800/50 hover:bg-red-700/50 border border-red-500/50 rounded-md transition-colors text-sm">
             <i class="fas fa-sign-out-alt mr-2"></i>SAIR DA SALA
           </button>
       </div>
     </aside>
 
     <!-- Center Chat -->
-    <section class="w-full md:w-1/2 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
+    <section class="w-full md:w-1/2 flex-1 min-h-0 flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
         <header class="p-3 border-b border-gray-700/50 text-center flex items-center gap-4 justify-center">
-          <img id="partner-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500">
+          <img id="partner-avatar-chat" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500 object-cover">
           <div>
             <h3 id="partner-name" class="font-bold text-lg text-white">CONEXÃO ESTABELECIDA</h3>
             <p id="partner-info" class="text-xs text-gray-400">Você está conversando com um estranho.</p>
@@ -368,10 +441,10 @@
         <div id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
           <!-- Messages will be injected here -->
         </div>
-        <footer class="p-3 border-t border-gray-700/50 bg-black/50">
-          <form id="message-form" class="flex items-center gap-3">
+        <footer class="p-2 md:p-3 border-t border-gray-700/50 bg-black/50">
+          <form id="message-form" class="flex items-center gap-2 md:gap-3">
             <input type="text" id="message-input" placeholder="Digite no Vazio..." autocomplete="off" class="flex-1 bg-black/50 border border-cyan-500/50 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white transition-all">
-            <button type="submit" id="send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-4 rounded-md transition-colors">
+            <button type="submit" id="send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-3 md:px-4 rounded-md transition-colors">
               <i class="fas fa-paper-plane"></i>
             </button>
           </form>
@@ -379,28 +452,31 @@
     </section>
 
     <!-- Right Sidebar -->
-    <aside class="w-full md:w-1/4 h-auto md:h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
-      <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">ÁREA VIP</h2>
+    <aside class="w-full md:w-1/4 h-auto md:h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10 flex-shrink-0">
+      <h2 class="text-xl md:text-2xl font-bold text-cyan-400 neon-text-cyan text-center border-b border-cyan-500/30 pb-2">ÁREA VIP</h2>
       <div class="flex-grow flex flex-col justify-center gap-4">
           <button class="w-full text-center p-4 border-2 border-cyan-400 rounded-md neon-button-glow hover:bg-cyan-400 hover:text-black transition-all">
-            <p class="font-bold text-lg">ATIVAR FILTRO DE GÊNERO</p>
+            <p class="font-bold text-base md:text-lg">ATIVAR FILTRO DE GÊNERO</p>
             <p class="text-xs font-sans">REQUER ASSINATURA VIP</p>
           </button>
           <button class="w-full text-center p-4 border-2 border-purple-500 text-purple-400 rounded-md neon-button-glow hover:bg-purple-500 hover:text-black transition-all">
-            <p class="font-bold text-lg">TURBO MATCH</p>
+            <p class="font-bold text-base md:text-lg">TURBO MATCH</p>
             <p class="text-xs font-sans">CONEXÃO IMEDIATA</p>
           </button>
       </div>
-      <button id="next-btn" class="w-full p-3 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded-md transition-colors">
+      <button id="next-btn" class="w-full py-3 px-4 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded-md transition-colors">
         PRÓXIMO
       </button>
     </aside>
   </main>
 
     <!-- Global Chat Screen -->
-    <main id="global-chat-screen" class="hidden w-full h-screen p-4 flex flex-col md:flex-row gap-4 font-orbitron bg-black relative overflow-hidden z-10">
-        <!-- Left Sidebar - Online Users -->
-        <aside id="global-chat-sidebar" class="w-full md:w-1/4 h-auto md:h-full hidden md:flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
+    <main id="global-chat-screen" class="hidden w-full h-screen p-2 sm:p-4 flex flex-col md:flex-row gap-4 font-orbitron bg-black relative overflow-hidden z-10">
+        <!-- Sidebar Overlay -->
+        <div id="sidebar-overlay" class="hidden md:hidden fixed inset-0 bg-black/60 z-20"></div>
+        
+        <!-- Left Sidebar - Online Users (Drawer on Mobile) -->
+        <aside id="global-chat-sidebar" class="fixed md:relative inset-y-0 left-0 w-11/12 max-w-sm md:w-1/4 md:max-w-none h-full flex flex-col gap-4 bg-black/80 backdrop-blur-lg md:bg-white/5 md:backdrop-blur-md border-r md:border border-cyan-500/30 p-4 neon-border-cyan z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
                  <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center">ONLINE</h2>
                  <button id="global-chat-back-btn" class="text-cyan-400 hover:text-white transition-colors">
@@ -413,7 +489,7 @@
         </aside>
 
         <!-- Center Chat -->
-        <section class="w-full md:w-3/4 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
+        <section class="w-full md:flex-1 h-full flex flex-col bg-black/50 border border-gray-700/50 rounded-lg overflow-hidden z-10">
             <header class="relative p-3 border-b border-gray-700/50 text-center">
                  <button id="toggle-users-btn" class="md:hidden text-cyan-400 hover:text-white transition-colors absolute left-4 top-1/2 -translate-y-1/2">
                     <i class="fas fa-users fa-lg"></i>
@@ -424,13 +500,13 @@
             <div id="global-chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
                 <!-- Global messages will be injected here -->
             </div>
-            <footer class="p-3 border-t border-gray-700/50 bg-black/50">
-                <form id="global-message-form" class="flex items-center gap-3">
+            <footer class="p-2 md:p-3 border-t border-gray-700/50 bg-black/50">
+                <form id="global-message-form" class="flex items-center gap-2 md:gap-3">
                     <input type="text" id="global-message-input" placeholder="Converse com o mundo..." autocomplete="off" class="flex-1 bg-black/50 border border-cyan-500/50 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white transition-all">
-                    <button type="button" id="record-audio-btn" class="text-cyan-400 hover:text-white text-xl px-3 transition-colors">
+                    <button type="button" id="record-audio-btn" class="text-cyan-400 hover:text-white text-xl px-2 md:px-3 transition-colors">
                       <i class="fas fa-microphone"></i>
                     </button>
-                    <button type="submit" id="global-send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-4 rounded-md transition-colors">
+                    <button type="submit" id="global-send-btn" class="bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-2 px-3 md:px-4 rounded-md transition-colors">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>
@@ -439,10 +515,10 @@
     </main>
     
     <!-- Contacts Screen -->
-    <div id="contacts-screen" class="hidden w-full h-full flex flex-col justify-center items-center p-4 relative z-10">
+    <div id="contacts-screen" class="hidden w-full h-full flex flex-col justify-center items-center p-2 sm:p-4 relative z-10">
         <div class="w-full max-w-2xl h-4/5 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 md:p-6 neon-border-cyan flex flex-col">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
-                <h2 class="text-2xl md:text-3xl font-bold text-cyan-400 neon-text-cyan">CONTATOS</h2>
+                <h2 class="text-xl md:text-2xl font-bold text-cyan-400 neon-text-cyan">CONTATOS</h2>
                 <button id="contacts-back-btn" class="text-cyan-400 hover:text-white transition-colors">
                    <i class="fas fa-times fa-lg"></i>
                </button>
@@ -454,11 +530,11 @@
     </div>
 
     <!-- Private Chat Screen -->
-    <main id="private-chat-screen" class="hidden w-full h-screen p-4 flex justify-center items-center font-orbitron bg-black relative overflow-hidden z-10">
+    <main id="private-chat-screen" class="hidden w-full h-screen p-2 sm:p-4 flex justify-center items-center font-orbitron bg-black relative overflow-hidden z-10">
         <section class="w-full max-w-3xl h-full md:h-5/6 flex flex-col bg-black/50 border border-cyan-500/50 neon-border-cyan rounded-lg overflow-hidden z-10">
             <header class="p-3 border-b border-cyan-500/50 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <img id="private-chat-partner-avatar" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500">
+                    <img id="private-chat-partner-avatar" src="https://i.pravatar.cc/150?u=a042581f4e29026704e" class="w-10 h-10 rounded-full border-2 border-gray-500 object-cover">
                     <div>
                       <h3 id="private-chat-partner-name" class="font-bold text-lg text-white">Carregando...</h3>
                       <p id="private-chat-partner-status" class="text-xs text-red-500 neon-text-red">Offline</p>
@@ -471,10 +547,10 @@
             <div id="private-chat-container" class="flex-1 p-4 overflow-y-auto space-y-4 no-scrollbar">
                 <!-- Private messages will be injected here -->
             </div>
-            <footer class="p-3 border-t border-cyan-500/50 bg-black/50">
-                <form id="private-message-form" class="flex items-center gap-3">
+            <footer class="p-2 md:p-3 border-t border-cyan-500/50 bg-black/50">
+                <form id="private-message-form" class="flex items-center gap-2 md:gap-3">
                     <input type="text" id="private-message-input" placeholder="Envie uma mensagem privada..." autocomplete="off" class="flex-1 bg-black/50 border border-cyan-500/50 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white transition-all">
-                    <button type="submit" id="private-send-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-4 rounded-md transition-colors">
+                    <button type="submit" id="private-send-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-3 md:px-4 rounded-md transition-colors">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>
@@ -483,10 +559,10 @@
     </main>
 
     <!-- Notifications Modal -->
-    <div id="notifications-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-11/12 max-w-md h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 neon-border-cyan flex flex-col">
+    <div id="notifications-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 z-40">
+        <div class="w-[98vw] max-w-md h-auto max-h-[90vh] bg-black/50 border border-cyan-500 rounded-lg p-4 md:p-6 neon-border-cyan flex flex-col">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
-                <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan">NOTIFICAÇÕES</h2>
+                <h2 class="text-xl md:text-2xl font-bold text-cyan-400 neon-text-cyan">NOTIFICAÇÕES</h2>
                 <button id="notifications-close-btn" class="text-cyan-400 hover:text-white transition-colors">
                    <i class="fas fa-times fa-lg"></i>
                </button>
@@ -498,18 +574,18 @@
     </div>
 
     <!-- Donation Modal -->
-    <div id="donation-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xl items-center justify-center p-4 z-50">
-      <div class="w-11/12 max-w-lg rounded-lg animated-premium-border">
+    <div id="donation-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-xl items-center justify-center p-2 sm:p-4 z-50">
+      <div class="w-[98vw] max-w-lg rounded-lg animated-premium-border">
           <div class="relative bg-black/90 p-6 md:p-8 rounded-lg text-center">
               <button id="donation-modal-close-btn" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-20">
                   <i class="fas fa-times fa-2x"></i>
               </button>
               <div class="mb-6">
                 <i class="fas fa-rocket text-5xl text-purple-400" style="text-shadow: 0 0 15px #a855f7;"></i>
-                  <h2 class="text-3xl md:text-4xl font-black text-purple-400 mt-4" style="text-shadow: 0 0 5px #a855f7, 0 0 10px #ffd700;">MANTENHA O VAZIO VIVO!</h2>
-                  <p class="text-base md:text-lg text-gray-300 mt-4">Sua doação ajuda a manter nossos servidores online e completamente livres de anúncios.</p>
+                  <h2 class="text-2xl md:text-4xl font-black text-purple-400 mt-4" style="text-shadow: 0 0 5px #a855f7, 0 0 10px #ffd700;">MANTENHA O VAZIO VIVO!</h2>
+                  <p class="text-sm md:text-lg text-gray-300 mt-4">Sua doação ajuda a manter nossos servidores online e livres de anúncios.</p>
               </div>
-              <button id="donate-now-btn" class="w-full font-bold py-3 md:py-4 px-4 rounded-md text-black bg-purple-500 border-2 border-purple-300 transition-all text-lg md:text-xl uppercase tracking-widest neon-premium-glow hover:bg-purple-400">
+              <button id="donate-now-btn" class="w-full font-bold py-3 md:py-4 px-4 rounded-md text-black bg-purple-500 border-2 border-purple-300 transition-all text-lg uppercase tracking-widest neon-premium-glow hover:bg-purple-400">
                   <i class="fas fa-hand-holding-heart mr-2"></i>DOAR AGORA
               </button>
               <p class="text-xs text-gray-500 mt-4">Após doar, envie o comprovante no suporte para aparecer no Ranking!</p>
@@ -518,15 +594,15 @@
     </div>
 
     <!-- Support Modal (Create Ticket) -->
-    <div id="support-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-11/12 max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 md:p-8 neon-border-cyan space-y-6">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl md:text-3xl font-bold text-white neon-text-cyan">ABRIR CHAMADO</h1>
+    <div id="support-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 z-40">
+        <div class="w-[98vw] max-w-lg bg-black/50 border border-cyan-500 rounded-lg p-4 md:p-6 neon-border-cyan space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex-shrink-0 flex items-center justify-between">
+                <h1 class="text-xl md:text-2xl font-bold text-white neon-text-cyan">ABRIR CHAMADO</h1>
                 <button id="support-modal-close-btn" class="text-cyan-400 hover:text-white transition-colors">
                    <i class="fas fa-times fa-lg"></i>
                </button>
             </div>
-            <form id="support-form" class="space-y-4">
+            <form id="support-form" class="space-y-4 overflow-y-auto no-scrollbar p-1">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="support-name" class="block text-cyan-400 text-sm mb-1">Nome</label>
@@ -559,7 +635,7 @@
     <!-- Admin Panel -->
     <div id="admin-panel" class="hidden w-full h-full flex flex-col p-4 relative z-20 overflow-y-auto no-scrollbar">
         <div class="flex items-center justify-between border-b border-green-500/30 pb-3 mb-4">
-            <h2 class="text-2xl md:text-3xl font-bold text-green-400 neon-text-green">PAINEL ADMIN</h2>
+            <h2 class="text-xl md:text-3xl font-bold text-green-400 neon-text-green">PAINEL ADMIN</h2>
             <button id="admin-panel-back-btn" class="text-green-400 hover:text-white transition-colors">
                <i class="fas fa-arrow-left fa-lg mr-2"></i> VOLTAR
            </button>
@@ -567,12 +643,12 @@
 
        <!-- Donation Management -->
         <div class="mb-6 bg-black/30 p-4 rounded-lg border border-green-500/30">
-            <h3 class="text-2xl font-bold text-green-400 neon-text-green mb-3">Gerenciar Doações</h3>
+            <h3 class="text-xl md:text-2xl font-bold text-green-400 neon-text-green mb-3">Gerenciar Doações</h3>
             <form id="donation-form" class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input type="text" id="donation-name" placeholder="Nome do Doador" required class="bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <input type="number" id="donation-amount" placeholder="Valor (Ex: 50.00)" step="0.01" required class="bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <input type="text" id="donation-message" placeholder="Mensagem Curta" required class="bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <input type="text" id="donation-name" placeholder="Nome do Doador" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <input type="number" id="donation-amount" placeholder="Valor (Ex: 50.00)" step="0.01" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <input type="text" id="donation-message" placeholder="Mensagem Curta" required class="w-full bg-black/50 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-400">
                 </div>
                 <button type="submit" class="w-full font-bold py-2 px-4 rounded-md text-black bg-green-500 hover:bg-green-400 transition-all">SALVAR DOAÇÃO</button>
             </form>
@@ -580,7 +656,7 @@
         
        <!-- Ticket Management -->
        <div class="flex-shrink-0">
-            <h3 class="text-2xl font-bold text-green-400 neon-text-green mb-3">Gerenciar Tickets</h3>
+            <h3 class="text-xl md:text-2xl font-bold text-green-400 neon-text-green mb-3">Gerenciar Tickets</h3>
             <div id="admin-filters" class="flex items-center gap-2 mb-4">
                     <button data-filter="Pendentes" class="admin-filter-btn font-bold py-1 px-3 rounded-md text-cyan-400 border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all active">Pendentes</button>
                     <button data-filter="Resolvido" class="admin-filter-btn font-bold py-1 px-3 rounded-md text-cyan-400 border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all">Resolvidos</button>
@@ -592,10 +668,10 @@
     </div>
     
     <!-- User Tickets Modal (List View) -->
-    <div id="user-tickets-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-40">
-        <div class="w-11/12 max-w-2xl h-auto max-h-[80vh] bg-black/50 border border-cyan-500 rounded-lg p-4 sm:p-6 neon-border-cyan flex flex-col">
+    <div id="user-tickets-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 z-40">
+        <div class="w-[98vw] max-w-2xl h-auto max-h-[90vh] bg-black/50 border border-cyan-500 rounded-lg p-4 md:p-6 neon-border-cyan flex flex-col">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-3 mb-4">
-                <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan">MEUS CHAMADOS</h2>
+                <h2 class="text-xl md:text-2xl font-bold text-cyan-400 neon-text-cyan">MEUS CHAMADOS</h2>
                 <div class="flex items-center gap-4">
                     <button id="open-new-ticket-btn" class="font-bold py-1 px-3 rounded-md text-black bg-cyan-400 neon-button-glow transition-all text-sm md:text-base">NOVO</button>
                     <button id="user-tickets-close-btn" class="text-cyan-400 hover:text-white transition-colors">
@@ -610,8 +686,8 @@
     </div>
 
     <!-- Ticket Chat Modal (Used by Admin and User) -->
-    <div id="ticket-chat-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-        <div id="ticket-chat-modal-content" class="w-11/12 max-w-2xl h-[90vh] bg-black/50 border rounded-lg flex flex-col">
+    <div id="ticket-chat-modal" class="hidden absolute inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 z-50">
+        <div id="ticket-chat-modal-content" class="w-[98vw] max-w-2xl h-[90vh] bg-black/50 border rounded-lg flex flex-col">
             <!-- Header -->
             <div id="ticket-chat-modal-header" class="p-4 border-b flex justify-between items-center">
                 <div>
@@ -707,17 +783,24 @@ document.addEventListener('DOMContentLoaded', () => {
         adminPanel = document.getElementById('admin-panel'), userTicketsModal = document.getElementById('user-tickets-modal'),
         ticketChatModal = document.getElementById('ticket-chat-modal');
   const enterVoidBtn = document.getElementById('enter-void-btn'), loginBtn = document.getElementById('login-btn'),
-        signupBtn = document.getElementById('signup-btn'),
+        signupBtn = document.getElementById('signup-btn'), profileModalCloseBtn = document.getElementById('profile-modal-close-btn'),
+        editProfileBtn = document.getElementById('edit-profile-btn'), cancelEditProfileBtn = document.getElementById('cancel-edit-profile-btn'),
         saveFullProfileBtn = document.getElementById('save-full-profile-btn'), randomChatExitBtn = document.getElementById('random-chat-exit-btn'),
         nextBtn = document.getElementById('next-btn'), globalChatBackBtn = document.getElementById('global-chat-back-btn'),
         contactsBackBtn = document.getElementById('contacts-back-btn'), privateChatBackBtn = document.getElementById('private-chat-back-btn'),
         notificationsBtn = document.getElementById('notifications-btn'), notificationsCloseBtn = document.getElementById('notifications-close-btn'),
-        supportProjectBtn = document.getElementById('support-project-btn'), donationModalCloseBtn = document.getElementById('donation-modal-close-btn'),
+        notificationsBtnMobile = document.getElementById('notifications-btn-mobile'),
+        supportProjectBtn = document.getElementById('support-project-btn'), 
+        supportProjectBtnMobile = document.getElementById('support-project-btn-mobile'), 
+        donationModalCloseBtn = document.getElementById('donation-modal-close-btn'),
         donateNowBtn = document.getElementById('donate-now-btn'), supportModalCloseBtn = document.getElementById('support-modal-close-btn'), 
         myTicketsBtn = document.getElementById('my-tickets-btn'), userTicketsCloseBtn = document.getElementById('user-tickets-close-btn'),
         openNewTicketBtn = document.getElementById('open-new-ticket-btn'), adminBtn = document.getElementById('admin-btn'),
         adminPanelBackBtn = document.getElementById('admin-panel-back-btn'), ticketChatModalCloseBtn = document.getElementById('ticket-chat-modal-close-btn'),
-        ticketChatDeleteBtn = document.getElementById('ticket-chat-delete-btn'), toggleUsersBtn = document.getElementById('toggle-users-btn');
+        ticketChatDeleteBtn = document.getElementById('ticket-chat-delete-btn'), toggleUsersBtn = document.getElementById('toggle-users-btn'),
+        bottomNavGlobal = document.getElementById('bottom-nav-global'), bottomNavMatch = document.getElementById('bottom-nav-match'),
+        bottomNavPrivate = document.getElementById('bottom-nav-private'), bottomNavSupport = document.getElementById('bottom-nav-support'),
+        bottomNavProfile = document.getElementById('bottom-nav-profile'), bottomNavAdmin = document.getElementById('bottom-nav-admin');
   const loginForm = document.getElementById('login-form'), profileForm = document.getElementById('profile-form'),
         messageForm = document.getElementById('message-form'), globalMessageForm = document.getElementById('global-message-form'),
         privateMessageForm = document.getElementById('private-message-form'), supportForm = document.getElementById('support-form'),
@@ -731,9 +814,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ticketChatMessageInput = document.getElementById('ticket-chat-message-input'), ticketChatStatusSelect = document.getElementById('ticket-chat-status-select'),
         ticketChatIdInput = document.getElementById('ticket-chat-id');
   const authErrorEl = document.getElementById('auth-error'), fullProfileErrorEl = document.getElementById('full-profile-error'),
+        profileModalTitle = document.getElementById('profile-modal-title'), profileViewState = document.getElementById('profile-view-state'),
+        profileAvatarView = document.getElementById('profile-avatar-view'), profileUsernameView = document.getElementById('profile-username-view'),
+        profileGenderView = document.getElementById('profile-gender-view'), profileRegionView = document.getElementById('profile-region-view'),
+        profileInterestsView = document.getElementById('profile-interests-view'),
         userProfileFooter = document.getElementById('user-profile-footer'), userAvatarHome = document.getElementById('user-avatar-home'),
         userNameHome = document.getElementById('user-name-home'), userRegionHome = document.getElementById('user-region-home'),
-        friendRequestNotification = document.getElementById('friend-request-notification'), ticketNotification = document.getElementById('ticket-notification'),
+        friendRequestNotification = document.getElementById('friend-request-notification'), 
+        friendRequestNotificationMobile = document.getElementById('friend-request-notification-mobile'),
+        ticketNotification = document.getElementById('ticket-notification'),
         chatContainer = document.getElementById('chat-container'), partnerNameEl = document.getElementById('partner-name'),
         partnerInfoEl = document.getElementById('partner-info'), myAvatarChatEl = document.getElementById('my-avatar-chat'),
         partnerAvatarChatEl = document.getElementById('partner-avatar-chat'), onlineUsersEl = document.getElementById('online-users'),
@@ -750,7 +839,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ticketChatAdminControls = document.getElementById('ticket-chat-admin-controls'), ticketChatUserControls = document.getElementById('ticket-chat-user-controls'),
         ticketChatSendBtn = document.getElementById('ticket-chat-send-btn'),
         hallOfFameContainer = document.getElementById('hall-of-fame'), hallOfFameList = document.getElementById('hall-of-fame-list'),
-        globalChatSidebar = document.getElementById('global-chat-sidebar');
+        hallOfFameToggle = document.getElementById('hall-of-fame-toggle'),
+        globalChatSidebar = document.getElementById('global-chat-sidebar'), sidebarOverlay = document.getElementById('sidebar-overlay');
         
   // ---=== INITIALIZATION & BOOTSTRAP ===---
   try {
@@ -799,7 +889,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!targetView.classList.contains('flex')) targetView.classList.add('flex');
     }
   };
-  const showProfileModal = (show) => { if (profileModal) { profileModal.classList.toggle('hidden', !show); profileModal.classList.toggle('flex', show); } };
+  const setProfileModalState = (isEditing) => {
+      if (profileViewState) profileViewState.classList.toggle('hidden', isEditing);
+      if (profileForm) profileForm.classList.toggle('hidden', !isEditing);
+      if (profileModalTitle) profileModalTitle.textContent = isEditing ? 'EDITAR PERFIL' : 'MEU PERFIL';
+  };
+
+  const showProfileModal = (show, isInitialSetup = false) => {
+      if (show) {
+          setProfileModalState(isInitialSetup);
+          if (isInitialSetup && profileModalTitle) profileModalTitle.textContent = 'COMPLETE SEU PERFIL';
+      }
+      if (profileModal) {
+          profileModal.classList.toggle('hidden', !show);
+          profileModal.classList.toggle('flex', show);
+      }
+  };
   const showSupportModal = (show) => {
     if (show && currentUserProfile) { if(supportName) supportName.value = currentUserProfile.username; if(supportEmail) supportEmail.value = currentUser.email; }
     if (supportModal) { supportModal.classList.toggle('hidden', !show); supportModal.classList.toggle('flex', show); }
@@ -814,6 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
    const updateUI = (profile) => {
       if (!profile) return;
+      // Footer UI
       if (userAvatarHome) userAvatarHome.src = profile.avatar || 'https://i.pravatar.cc/150';
       if (userNameHome) {
           if (currentUser.uid === ADMIN_UID) {
@@ -826,6 +932,19 @@ document.addEventListener('DOMContentLoaded', () => {
   };
    const populateProfileModal = (profile) => {
       if (!profile) return;
+      // View State
+      if(profileAvatarView) profileAvatarView.src = profile.avatar || 'https://i.pravatar.cc/150';
+      if(profileUsernameView) {
+          if (currentUser && currentUser.uid === ADMIN_UID) {
+            profileUsernameView.innerHTML = `<span class="admin-glow-gold">${profile.username || '...'} <i class="fas fa-shield-halved text-yellow-400"></i></span>`;
+          } else {
+            profileUsernameView.textContent = profile.username || '...';
+          }
+      }
+      if(profileGenderView) profileGenderView.textContent = profile.gender || '...';
+      if(profileRegionView) profileRegionView.textContent = profile.region || '...';
+      if(profileInterestsView) profileInterestsView.textContent = profile.interests || '...';
+      // Edit State (Form)
       if (usernameInput) usernameInput.value = profile.username || '';
       if (genderSelect) genderSelect.value = profile.gender || '';
       if (regionSelect) regionSelect.value = profile.region || '';
@@ -863,11 +982,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (privateMessagesListener && privateChatRoomId) db.ref(`private_chats/${privateChatRoomId}/messages`).off('child_added', privateMessagesListener);
     if (donationsListener) db.ref('donations').off('value', donationsListener);
     
-    matchMakingListener = null; messagesListener = null; globalMessagesListener = null; globalOnlineListener = null;
-    adminTicketsListener = null; userTicketsListener = null; ticketRepliesListener = null; currentTicketChatListener = null;
-    friendRequestListener = null; contactsListener = null; privateMessagesListener = null; donationsListener = null;
+    // Reset Admin UI on logout
+    const navButtons = document.querySelectorAll('#mobile-bottom-nav button:not(#bottom-nav-admin)');
+    if (bottomNavAdmin) {
+        bottomNavAdmin.classList.add('hidden');
+        bottomNavAdmin.classList.remove('flex');
+    }
+    navButtons.forEach(btn => {
+        btn.classList.remove('w-1/6');
+        btn.classList.add('w-1/5');
+    });
     
-    console.log('Todos os listeners foram limpos devido ao logout.');
+    console.log('Todos os listeners e UI de admin foram limpos devido ao logout.');
   };
 
   const startApp = () => {
@@ -883,7 +1009,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (adminBtn) adminBtn.classList.add('hidden');
       if (user) {
         currentUser = user;
-        if (currentUser.uid === ADMIN_UID && adminBtn) adminBtn.classList.remove('hidden');
+
+        // Admin UI checks
+        const navButtons = document.querySelectorAll('#mobile-bottom-nav button:not(#bottom-nav-admin)');
+        if (currentUser.uid === ADMIN_UID) {
+            if(adminBtn) adminBtn.classList.remove('hidden');
+            if(bottomNavAdmin) {
+                bottomNavAdmin.classList.remove('hidden');
+                bottomNavAdmin.classList.add('flex');
+            }
+            navButtons.forEach(btn => { btn.classList.remove('w-1/5'); btn.classList.add('w-1/6'); });
+        } else {
+            if(bottomNavAdmin) {
+                bottomNavAdmin.classList.add('hidden');
+                bottomNavAdmin.classList.remove('flex');
+            }
+            navButtons.forEach(btn => { btn.classList.remove('w-1/6'); btn.classList.add('w-1/5'); });
+        }
+        
         const userRef = db.ref(`users/${user.uid}`);
         userRef.on('value', (snapshot) => { 
           const profile = snapshot.val();
@@ -918,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           } else {
             currentUserProfile = null; 
-            showProfileModal(true);
+            showProfileModal(true, true); // isInitialSetup = true
             setLoadingState(false); 
             document.body.classList.remove('hide-until-ready');
           }
@@ -962,7 +1105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nameHtml = `<p class="admin-glow-gold">${senderName} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
         }
         
-        msgDiv.innerHTML = `<div class="${isMe ? 'order-1' : ''}"><img src="${senderAvatar}" class="w-10 h-10 rounded-full"></div><div class="max-w-xs md:max-w-md ${isMe ? 'bg-cyan-800' : 'bg-gray-700'} rounded-lg p-3">${nameHtml}<p class="text-white break-words">${msg.text}</p></div>`;
+        msgDiv.innerHTML = `<div class="${isMe ? 'order-1' : ''}"><img src="${senderAvatar}" class="w-10 h-10 rounded-full object-cover"></div><div class="max-w-[85%] ${isMe ? 'bg-cyan-800' : 'bg-gray-700'} rounded-lg p-3">${nameHtml}<p class="text-white break-words">${msg.text}</p></div>`;
         if(container) { container.appendChild(msgDiv); container.scrollTop = container.scrollHeight; }
     };
     const sendFriendRequest = (targetUid) => {
@@ -1010,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50';
-            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"><div class="flex-grow">${nameHtml}</div>${relationshipButton}`;
+            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400 object-cover"><div class="flex-grow">${nameHtml}</div>${relationshipButton}`;
             globalOnlineUsersList.appendChild(userEl);
           });
         });
@@ -1086,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         const friendEl = document.createElement('div');
                         friendEl.className = 'flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-cyan-900/50'; friendEl.dataset.friendId = friendId;
-                        friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'}"><div class="flex-grow">${nameHtml}<p class="text-sm ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
+                        friendEl.innerHTML = `<img src="${friendProfile.avatar}" class="w-12 h-12 rounded-full border-2 ${isOnline ? 'border-green-400' : 'border-gray-600'} object-cover"><div class="flex-grow">${nameHtml}<p class="text-sm ${isOnline ? 'text-green-400 neon-text-green' : 'text-gray-500'}">${isOnline ? 'Online' : 'Offline'}</p></div>`;
                         if (contactsList) contactsList.appendChild(friendEl);
                     }
                 });
@@ -1134,11 +1277,14 @@ document.addEventListener('DOMContentLoaded', () => {
         friendRequestListener = requestsRef.on('value', snapshot => {
             if(!snapshot.exists()) {
                 if(friendRequestNotification) friendRequestNotification.classList.add('hidden');
+                if(friendRequestNotificationMobile) friendRequestNotificationMobile.classList.add('hidden');
                 renderFriendRequests({}); return;
             }
             const requests = snapshot.val();
             const pendingRequests = Object.values(requests).filter(req => req.status === 'pending');
-            if(friendRequestNotification) friendRequestNotification.classList.toggle('hidden', pendingRequests.length === 0);
+            const hasPending = pendingRequests.length > 0;
+            if(friendRequestNotification) friendRequestNotification.classList.toggle('hidden', !hasPending);
+            if(friendRequestNotificationMobile) friendRequestNotificationMobile.classList.toggle('hidden', !hasPending);
             renderFriendRequests(requests);
         });
     };
@@ -1154,10 +1300,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const reqEl = document.createElement('div');
                     reqEl.className = 'flex items-center gap-3 bg-gray-800/50 p-3 rounded-lg';
                     reqEl.innerHTML = `
-                        <img src="${profile.avatar}" class="w-10 h-10 rounded-full">
+                        <img src="${profile.avatar}" class="w-10 h-10 rounded-full object-cover">
                         <p class="flex-grow"><span class="font-bold">${profile.username}</span> quer ser seu amigo.</p>
-                        <button data-requester-id="${requesterId}" class="accept-friend-btn bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-3 rounded-md transition-colors">Aceitar</button>
-                        <button data-requester-id="${requesterId}" class="decline-friend-btn bg-red-600 hover:bg-red-500 text-white font-bold py-1 px-3 rounded-md transition-colors">Recusar</button>
+                        <button data-requester-id="${requesterId}" class="accept-friend-btn bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-3 rounded-md transition-colors">Aceitar</button>
+                        <button data-requester-id="${requesterId}" class="decline-friend-btn bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded-md transition-colors">Recusar</button>
                     `;
                     notificationsList.appendChild(reqEl);
                 }
@@ -1227,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-  // ---=== SUPPORT TICKET CHAT SYSTEM (UNCHANGED) ===---
+  // ---=== SUPPORT TICKET CHAT SYSTEM ===---
   const listenForTicketReplies = (user) => {
     const ticketsRef = db.ref('support_tickets').orderByChild('userId').equalTo(user.uid);
     if(ticketRepliesListener) ticketsRef.off('value', ticketRepliesListener);
@@ -1329,15 +1475,37 @@ document.addEventListener('DOMContentLoaded', () => {
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(startApp).catch(startApp);
   populateRegions();
 
+  // Desktop Cards
   if (globalChatCard) { globalChatCard.addEventListener('click', enterGlobalChat); }
   if (matchBtn) { matchBtn.addEventListener('click', () => { if (currentUserProfile) findPartner(); }); }
   if (privateChatCard) { privateChatCard.addEventListener('click', enterContactsScreen); }
+  
+  // Mobile Bottom Nav
+  if (bottomNavGlobal) { bottomNavGlobal.addEventListener('click', enterGlobalChat); }
+  if (bottomNavMatch) { bottomNavMatch.addEventListener('click', () => { if (currentUserProfile) findPartner(); }); }
+  if (bottomNavPrivate) { bottomNavPrivate.addEventListener('click', enterContactsScreen); }
+  if (bottomNavSupport) { bottomNavSupport.addEventListener('click', enterMyTicketsView); }
+  if (bottomNavProfile) { bottomNavProfile.addEventListener('click', () => showProfileModal(true)); }
+  if (bottomNavAdmin) { bottomNavAdmin.addEventListener('click', openAdminPanel); }
+
   if (enterVoidBtn) { enterVoidBtn.addEventListener('click', () => showView('login')); }
   if (loginForm) { loginForm.addEventListener('submit', (e) => { e.preventDefault(); if (loginBtn) loginBtn.click(); }); }
   if (loginBtn) { loginBtn.addEventListener('click', () => { setLoadingState(true, 'Acessando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
   if (signupBtn) { signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
-  if (toggleUsersBtn && globalChatSidebar) { toggleUsersBtn.addEventListener('click', () => { globalChatSidebar.classList.toggle('hidden'); globalChatSidebar.classList.toggle('flex'); }); }
   
+  if (hallOfFameToggle && hallOfFameList) {
+    hallOfFameToggle.addEventListener('click', () => {
+        if (window.innerWidth < 1024) { // Only toggle on mobile/tablet
+            hallOfFameList.classList.toggle('hidden');
+            hallOfFameToggle.querySelector('.fa-chevron-down').classList.toggle('rotate-180');
+        }
+    });
+  }
+
+  // Profile Modal
+  if (profileModalCloseBtn) { profileModalCloseBtn.addEventListener('click', () => showProfileModal(false)); }
+  if (editProfileBtn) { editProfileBtn.addEventListener('click', () => setProfileModalState(true)); }
+  if (cancelEditProfileBtn) { cancelEditProfileBtn.addEventListener('click', () => setProfileModalState(false)); }
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1368,9 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isNewProfile) {
           location.reload(); 
         } else {
-          currentUserProfile = { ...currentUserProfile, ...profileDataToSave };
-          updateUI(currentUserProfile);
-          showProfileModal(false);
+          setProfileModalState(false);
           saveFullProfileBtn.disabled = false;
         }
       }).catch(err => {
@@ -1379,6 +1545,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+  
+  // Mobile drawer for Global Chat
+  const toggleSidebar = () => {
+      globalChatSidebar.classList.toggle('-translate-x-full');
+      sidebarOverlay.classList.toggle('hidden');
+  };
+  if (toggleUsersBtn && globalChatSidebar && sidebarOverlay) {
+      toggleUsersBtn.addEventListener('click', toggleSidebar);
+      sidebarOverlay.addEventListener('click', toggleSidebar);
+  }
 
   if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), timestamp: firebase.database.ServerValue.TIMESTAMP }); messageInput.value = ''; }}); }
   if (globalMessageForm) { if (globalMessageInput) globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); if(globalMessageInput.value.trim()){ db.ref('global_chat').push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: globalMessageInput.value.trim(), timestamp: firebase.database.ServerValue.TIMESTAMP }); globalMessageInput.value = ''; } }); }
@@ -1386,8 +1562,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (globalChatBackBtn) { globalChatBackBtn.addEventListener('click', leaveGlobalChat); }
   if (userProfileFooter) { userProfileFooter.addEventListener('click', () => showProfileModal(true)); }
   if (notificationsBtn) { notificationsBtn.addEventListener('click', () => showNotificationsModal(true)); }
+  if (notificationsBtnMobile) { notificationsBtnMobile.addEventListener('click', () => showNotificationsModal(true)); }
   if (notificationsCloseBtn) { notificationsCloseBtn.addEventListener('click', () => showNotificationsModal(false)); }
   if (supportProjectBtn) { supportProjectBtn.addEventListener('click', () => showDonationModal(true)); }
+  if (supportProjectBtnMobile) { supportProjectBtnMobile.addEventListener('click', () => showDonationModal(true)); }
   if (donationModalCloseBtn) { donationModalCloseBtn.addEventListener('click', () => showDonationModal(false)); }
   if (donateNowBtn) { donateNowBtn.addEventListener('click', () => window.open('https://pixgg.com/Converso', '_blank')); }
   if (randomChatExitBtn) { randomChatExitBtn.addEventListener('click', exitRandomChat); }
@@ -1445,7 +1623,15 @@ document.addEventListener('DOMContentLoaded', () => {
       ticketChatMessageInput.value = '';
     });
   }
-  if (ticketChatStatusSelect) { ticketChatStatusSelect.addEventListener('change', (e) => { if (ticketChatIdInput.value) db.ref(`support_tickets/${ticketChatIdInput.value}`).update({ status: e.target.value, lastUpdated: firebase.database.ServerValue.TIMESTAMP }); }); }
+  if (ticketChatStatusSelect) { 
+    ticketChatStatusSelect.addEventListener('change', (e) => { 
+      const ticketId = ticketChatIdInput.value;
+      const newStatus = e.target.value;
+      if (ticketId) {
+        db.ref(`support_tickets/${ticketId}`).update({ status: newStatus, lastUpdated: firebase.database.ServerValue.TIMESTAMP });
+      }
+    }); 
+  }
   if (ticketChatDeleteBtn) { ticketChatDeleteBtn.addEventListener('click', () => { if (ticketChatIdInput.value && confirm("Tem certeza que deseja apagar este chamado permanentemente?")) { db.ref(`support_tickets/${ticketChatIdInput.value}`).remove().then(closeTicketChatModal); }}); }
 });
 </script>
