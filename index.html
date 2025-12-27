@@ -20,7 +20,7 @@
   <!-- Google Fonts: Orbitron -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display-swap" rel="stylesheet">
 
   <style>
     body {
@@ -57,6 +57,11 @@
     .vip-name {
       color: #FFD700;
       text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+      font-weight: bold;
+    }
+    .admin-glow-gold {
+      text-shadow: 0 0 10px #ffd700, 0 0 20px #ffaa00;
+      color: #fff;
       font-weight: bold;
     }
     .vip-msg {
@@ -907,12 +912,19 @@ document.addEventListener('DOMContentLoaded', () => {
             senderAvatar = isMe ? currentUserProfile.avatar : (partnerProfile ? partnerProfile.avatar : 'https://i.pravatar.cc/150');
         }
 
+        let nameHtml;
+        if (msg.senderId === ADMIN_UID) {
+            nameHtml = `<p class="admin-glow-gold">${senderName} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
+        } else {
+            nameHtml = `<p class="font-bold ${msg.isVip ? 'vip-name' : ''} ${isMe ? 'text-cyan-300' : 'text-white'}">${senderName}</p>`;
+        }
+
         const content = `
             <div class="${isMe ? 'order-1' : ''}">
                 <img src="${senderAvatar}" class="w-10 h-10 rounded-full">
             </div>
             <div class="max-w-xs md:max-w-md ${isMe ? 'bg-cyan-800' : 'bg-gray-700'} rounded-lg p-3">
-                <p class="font-bold ${msg.isVip ? 'vip-name' : ''} ${isMe ? 'text-cyan-300' : 'text-white'}">${senderName}</p>
+                ${nameHtml}
                 <p class="text-white break-words">${msg.text}</p>
             </div>`;
         msgDiv.innerHTML = content;
@@ -944,8 +956,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userSnap.exists()) {
               const profile = userSnap.val();
               const userEl = document.createElement('div');
+              let nameHtml;
+              if (uid === ADMIN_UID) {
+                  nameHtml = `<p class="admin-glow-gold text-sm">${profile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
+              } else {
+                  nameHtml = `<p>${profile.username}</p>`;
+              }
               userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50 cursor-pointer';
-              userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"> <p>${profile.username}</p>`;
+              userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"> ${nameHtml}`;
               globalOnlineUsersList.appendChild(userEl);
             }
           }
