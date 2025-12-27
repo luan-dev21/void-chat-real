@@ -20,7 +20,7 @@
   <!-- Google Fonts: Orbitron -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display-swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
 
   <style>
     body {
@@ -400,7 +400,7 @@
         <!-- Left Sidebar - Online Users -->
         <aside class="w-1/4 h-full flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 neon-border-cyan z-10">
             <div class="flex items-center justify-between border-b border-cyan-500/30 pb-2">
-                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center">ONLINE</h2>
+                 <h2 class="text-2xl font-bold text-cyan-400 neon-text-cyan text-center">ONLINE NO CHAT</h2>
                  <button id="global-chat-back-btn" class="text-cyan-400 hover:text-white transition-colors">
                     <i class="fas fa-arrow-left fa-lg"></i>
                 </button>
@@ -810,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const managePresence = (user) => {
     const userStatusRef = db.ref(`/presence/${user.uid}`);
     const connectedRef = db.ref('.info/connected');
-    connectedRef.on('value', (snap) => { if (snap.val() === true) { userStatusRef.set(true); userStatusRef.onDisconnect().remove(); }});
+    connectedRef.on('value', (snap) => { if (snap.val() === true) { userStatusRef.set(true); userStatusRef.onDisconnect().remove(); db.ref(`users/${user.uid}/inGlobalChat`).onDisconnect().set(false); }});
   };
   const listenForFriendRequests = (user) => { /* Unchanged */ };
   const listenForNotifications = (user) => { /* Unchanged */ };
@@ -939,35 +939,56 @@ document.addEventListener('DOMContentLoaded', () => {
         showView('global-chat');
         if (globalChatContainer) globalChatContainer.innerHTML = '';
         
+        const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
+        userStatusRef.set(true);
+        userStatusRef.onDisconnect().set(false);
+
         const messagesRef = db.ref('global_chat').limitToLast(100);
         if (globalMessagesListener) messagesRef.off('child_added', globalMessagesListener);
         globalMessagesListener = messagesRef.on('child_added', snapshot => {
             renderMessage(snapshot.val(), globalChatContainer, true);
         });
 
-        const presenceRef = db.ref('presence');
-        if (globalOnlineListener) presenceRef.off('value', globalOnlineListener);
-        globalOnlineListener = presenceRef.on('value', async snapshot => {
-          if (!snapshot.exists() || !globalOnlineUsersList) return;
+        const usersInChatRef = db.ref('users').orderByChild('inGlobalChat').equalTo(true);
+        if (globalOnlineListener) usersInChatRef.off('value', globalOnlineListener);
+        globalOnlineListener = usersInChatRef.on('value', snapshot => {
+          if (!globalOnlineUsersList) return;
           globalOnlineUsersList.innerHTML = '';
-          const onlineUIDs = Object.keys(snapshot.val());
-          for (const uid of onlineUIDs) {
-            const userSnap = await db.ref(`users/${uid}`).once('value');
-            if (userSnap.exists()) {
-              const profile = userSnap.val();
-              const userEl = document.createElement('div');
-              let nameHtml;
-              if (uid === ADMIN_UID) {
-                  nameHtml = `<p class="admin-glow-gold text-sm">${profile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
-              } else {
-                  nameHtml = `<p>${profile.username}</p>`;
-              }
-              userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50 cursor-pointer';
-              userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"> ${nameHtml}`;
-              globalOnlineUsersList.appendChild(userEl);
-            }
+          if (!snapshot.exists()) {
+             globalOnlineUsersList.innerHTML = '<p class="text-center text-gray-500 text-sm">Ninguém aqui ainda.</p>';
+             return;
           }
+          snapshot.forEach(childSnapshot => {
+            const uid = childSnapshot.key;
+            const profile = childSnapshot.val();
+            const userEl = document.createElement('div');
+            let nameHtml;
+            if (uid === ADMIN_UID) {
+                nameHtml = `<p class="admin-glow-gold text-sm">${profile.username} <i class="fas fa-shield-halved text-yellow-400 ml-1"></i></p>`;
+            } else {
+                nameHtml = `<p>${profile.username}</p>`;
+            }
+            userEl.className = 'flex items-center gap-3 p-2 rounded-md hover:bg-cyan-900/50 cursor-pointer';
+            userEl.innerHTML = `<img src="${profile.avatar}" class="w-8 h-8 rounded-full border-2 border-cyan-400"> ${nameHtml}`;
+            globalOnlineUsersList.appendChild(userEl);
+          });
         });
+    };
+
+    const leaveGlobalChat = async () => {
+        if (!currentUser) return;
+
+        const messagesRef = db.ref('global_chat');
+        if (globalMessagesListener) messagesRef.off('child_added', globalMessagesListener);
+        
+        const usersInChatRef = db.ref('users').orderByChild('inGlobalChat').equalTo(true);
+        if (globalOnlineListener) usersInChatRef.off('value', globalOnlineListener);
+
+        const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
+        await userStatusRef.set(false);
+        userStatusRef.onDisconnect().cancel();
+
+        showView('home');
     };
     
     const findPartner = async () => {
@@ -1169,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); messageInput.value = ''; }}); }
   if (globalMessageForm) { if (globalMessageInput) globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); if(globalMessageInput.value.trim()){ db.ref('global_chat').push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: globalMessageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); globalMessageInput.value = ''; } }); }
-  if (globalChatBackBtn) { globalChatBackBtn.addEventListener('click', () => showView('home')); }
+  if (globalChatBackBtn) { globalChatBackBtn.addEventListener('click', leaveGlobalChat); }
   if (userProfileFooter) { userProfileFooter.addEventListener('click', () => showProfileModal(true)); }
   if (notificationsBtn) { notificationsBtn.addEventListener('click', () => showNotificationsModal(true)); }
   if (notificationsCloseBtn) { notificationsCloseBtn.addEventListener('click', () => showNotificationsModal(false)); }
@@ -1213,8 +1234,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ticketChatMessageInput.value = '';
     });
   }
-  if (ticketChatStatusSelect) { ticketChatStatusSelect.addEventListener('change', (e) => { if (ticketChatIdInput.value) db.ref(`support_tickets/${ticketChatIdInput.value}`).update({ status: e.target.value, lastUpdated: firebase.database.ServerValue.TIMESTAMP }); }); }
-  if (ticketChatDeleteBtn) { ticketChatDeleteBtn.addEventListener('click', () => { if (ticketChatIdInput.value && confirm("Tem certeza que deseja apagar este chamado permanentemente?")) { db.ref(`support_tickets/${ticketChatIdInput.value}`).remove().then(closeTicketChatModal); }}); }
+  if (ticketChatStatusSelect) { ticketChatStatusSelect.addEventListener('change', (e) => { if (ticketChatIdInput.value) db.ref(`support_tickets/${ticketIdInput.value}`).update({ status: e.target.value, lastUpdated: firebase.database.ServerValue.TIMESTAMP }); }); }
+  if (ticketChatDeleteBtn) { ticketChatDeleteBtn.addEventListener('click', () => { if (ticketChatIdInput.value && confirm("Tem certeza que deseja apagar este chamado permanentemente?")) { db.ref(`support_tickets/${ticketIdInput.value}`).remove().then(closeTicketChatModal); }}); }
 });
 </script>
 
