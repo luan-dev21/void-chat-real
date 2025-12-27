@@ -882,7 +882,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
           } else {
-            currentUserProfile = null; showProfileModal(true);
+            currentUserProfile = null; 
+            showProfileModal(true);
           }
           setLoadingState(false); document.body.classList.remove('hide-until-ready');
         }).catch((error) => { setLoadingState(false); showView('login'); document.body.classList.remove('hide-until-ready');});
@@ -980,7 +981,6 @@ document.addEventListener('DOMContentLoaded', () => {
         globalMessagesListener = null; globalOnlineListener = null;
         const userStatusRef = db.ref(`users/${currentUser.uid}/inGlobalChat`);
         await userStatusRef.set(false);
-        // Do not cancel the onDisconnect here, as it's a global one now.
         showView('home');
     };
     const findPartner = async () => {
@@ -1246,15 +1246,60 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loginBtn) { loginBtn.addEventListener('click', () => { setLoadingState(true, 'Acessando...'); auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
   if (signupBtn) { signupBtn.addEventListener('click', () => { setLoadingState(true, 'Criando conta...'); auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value).catch(handleAuthError); }); }
   if (googleSigninBtn) { googleSigninBtn.addEventListener('click', () => auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()).catch(handleAuthError)); }
+  
   if (profileForm) {
     profileForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const profileData = { username: usernameInput.value.trim(), gender: genderSelect.value, region: regionSelect.value, interests: interestsInput.value.trim(), avatar: avatarInput.value.trim(), isOnline: false };
-      if (!Object.values(profileData).every(Boolean)) { if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'Preencha todos os campos.'; return; }
+      const isNewProfile = !currentUserProfile; // Check if it's a brand new profile
+
+      const profileDataToSave = { 
+        username: usernameInput.value.trim(), 
+        gender: genderSelect.value, 
+        region: regionSelect.value, 
+        interests: interestsInput.value.trim(), 
+        avatar: avatarInput.value.trim() 
+      };
+
+      // For new profiles, all fields are mandatory.
+      if (isNewProfile && (!profileDataToSave.username || !profileDataToSave.gender || !profileDataToSave.region || !profileDataToSave.interests || !profileDataToSave.avatar)) {
+        if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'Preencha todos os campos para criar seu perfil.';
+        return;
+      }
+      
+      // For any profile, new or existing, username is always required.
+      if (!profileDataToSave.username) {
+        if(fullProfileErrorEl) fullProfileErrorEl.textContent = 'O nome de usuário é obrigatório.';
+        return;
+      }
+
+      if(fullProfileErrorEl) fullProfileErrorEl.textContent = '';
       saveFullProfileBtn.disabled = true;
-      db.ref(`users/${currentUser.uid}`).set(profileData).then(() => location.reload());
+
+      const dbRef = db.ref(`users/${currentUser.uid}`);
+      
+      // Use .update() for existing profiles to avoid overwriting data like 'isOnline'.
+      // For new profiles, use .set() to create the initial record.
+      const operation = isNewProfile 
+        ? dbRef.set({ ...profileDataToSave, isOnline: false }) 
+        : dbRef.update(profileDataToSave);
+
+      operation.then(() => {
+        if (isNewProfile) {
+          location.reload(); // Reload is necessary to initialize the full app state for the new user
+        } else {
+          // For updates, just update local state and close the modal. Much smoother UX.
+          currentUserProfile = { ...currentUserProfile, ...profileDataToSave };
+          updateUI(currentUserProfile);
+          showProfileModal(false);
+          saveFullProfileBtn.disabled = false;
+        }
+      }).catch(err => {
+        if(fullProfileErrorEl) fullProfileErrorEl.textContent = `Erro ao salvar: ${err.message}`;
+        saveFullProfileBtn.disabled = false;
+      });
     });
   }
+
   if (messageForm) { messageForm.addEventListener('submit', e => { e.preventDefault(); if (messageInput.value.trim() && chatRoomId) { db.ref(`chat_rooms/${chatRoomId}/messages`).push({ senderId: currentUser.uid, text: messageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); messageInput.value = ''; }}); }
   if (globalMessageForm) { if (globalMessageInput) globalMessageForm.addEventListener('submit', (e) => { e.preventDefault(); if(globalMessageInput.value.trim()){ db.ref('global_chat').push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: globalMessageInput.value.trim(), isVip: currentUserProfile.isVip || false, timestamp: firebase.database.ServerValue.TIMESTAMP }); globalMessageInput.value = ''; } }); }
   if (privateMessageForm) { privateMessageForm.addEventListener('submit', e => { e.preventDefault(); if (privateMessageInput.value.trim() && privateChatRoomId) { db.ref(`private_chats/${privateChatRoomId}/messages`).push({ senderId: currentUser.uid, senderName: currentUserProfile.username, senderAvatar: currentUserProfile.avatar, text: privateMessageInput.value.trim(), timestamp: firebase.database.ServerValue.TIMESTAMP }); privateMessageInput.value = ''; } }); }
